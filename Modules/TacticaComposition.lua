@@ -1064,6 +1064,32 @@ function TC:CreateImportFrame()
     if not HasValidCompositionText(edit:GetText()) then return end
     TC:ShowSplitRaidFrame()
   end)
+
+  -- Parsing large JSON payloads on every keystroke can freeze the 3.3.5 client.
+  -- Coalesce validation/state updates to run once shortly after text input settles.
+  local validatePump = nil
+  local function QueueImportValidation()
+    if validatePump then return end
+    local waited = 0
+    validatePump = CreateFrame("Frame")
+    validatePump:SetScript("OnUpdate", function()
+      waited = waited + (arg1 or 0)
+      if waited < 0.08 then return end
+      validatePump:SetScript("OnUpdate", nil)
+      validatePump = nil
+
+      local current = edit:GetText()
+      local hasInput = trim(current) ~= ""
+      local hasValidInput = HasValidCompositionText(current)
+      local canSort = hasValidInput and CanManageRaidSubgroups() and (UnitInRaid and UnitInRaid("player"))
+      SetButtonEnabled(submit, hasInput)
+      SetButtonEnabled(btnSetup, hasInput)
+      SetAccentButtonEnabled(btnKeywordInvite, hasValidInput)
+      SetAccentButtonEnabled(btnSortRaid, canSort)
+      TC:UpdateImportSplitControls(current)
+    end)
+  end
+
   edit:SetScript("OnTextChanged", function(...)
     local lines = countLines(edit:GetText())
     local minH = 320
@@ -1071,15 +1097,7 @@ function TC:CreateImportFrame()
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
     if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, scroll) end
-    local current = edit:GetText()
-    local hasInput = trim(current) ~= ""
-    local hasValidInput = HasValidCompositionText(current)
-    local canSort = hasValidInput and CanManageRaidSubgroups() and (UnitInRaid and UnitInRaid("player"))
-    SetButtonEnabled(submit, hasInput)
-    SetButtonEnabled(btnSetup, hasInput)
-    SetAccentButtonEnabled(btnKeywordInvite, hasValidInput)
-    SetAccentButtonEnabled(btnSortRaid, canSort)
-    TC:UpdateImportSplitControls(current)
+    QueueImportValidation()
   end)
   submit:SetScript("OnClick", function()
     if not ParseAndStoreCurrent(edit:GetText(), self.pendingSplitConfig) then return end
