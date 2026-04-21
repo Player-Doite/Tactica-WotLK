@@ -1040,10 +1040,10 @@ function TC:CreateImportFrame()
   edit:SetScript("OnMouseDown", FocusImportEdit)
 
   scroll:SetScript("OnVerticalScroll", function(...)
-    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(...) end
+    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(scroll, ...) end
   end)
   edit:SetScript("OnCursorChanged", function(...)
-    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(...) end
+    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(edit, ...) end
   end)
 
   btnSetup:SetScript("OnClick", function()
@@ -1070,7 +1070,7 @@ function TC:CreateImportFrame()
     local targetH = lines * 14 + 16
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
-    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(...) end
+    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, ...) end
     local current = edit:GetText()
     local hasInput = trim(current) ~= ""
     local hasValidInput = HasValidCompositionText(current)
