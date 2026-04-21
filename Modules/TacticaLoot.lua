@@ -270,7 +270,7 @@ local function InitPresetMLDropdown(dd)
       text = "None/"..(GetRaidLeaderNameForLabel() or "raidlead"),
       func = function()
         SelectedPresetML = ""
-        UIDropDownMenu_SetText("None/"..(GetRaidLeaderNameForLabel() or "raidlead"), dd)
+        UIDropDownMenu_SetText(dd, "None/"..(GetRaidLeaderNameForLabel() or "raidlead"))
         if InRaid() and IsRL() and type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
           TacticaRaidRoles_SetPresetMasterLooter("")
         end
@@ -284,7 +284,7 @@ local function InitPresetMLDropdown(dd)
         text = nm,
         func = function()
           SelectedPresetML = nm
-          UIDropDownMenu_SetText(nm, dd)
+          UIDropDownMenu_SetText(dd, nm)
           if InRaid() and IsRL() and type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
             TacticaRaidRoles_SetPresetMasterLooter(nm)
           end
@@ -329,7 +329,7 @@ local function CreateLootPopup()
         text = opt.text,
         func = function()
           SelectedMethod = opt.value
-          UIDropDownMenu_SetText(opt.text, dd)
+          UIDropDownMenu_SetText(dd, opt.text)
         end
       }
       UIDropDownMenu_AddButton(info)
@@ -412,11 +412,11 @@ function TacticaLoot_ShowPopup()
   for i=1, tlen(LOOT_METHODS) do
     if LOOT_METHODS[i].value == def then shown = LOOT_METHODS[i].text end
   end
-  if LootDropdown then UIDropDownMenu_SetText(shown, LootDropdown) end
+  if LootDropdown then UIDropDownMenu_SetText(LootDropdown, shown) end
   if LootMLDropdown then
     InitPresetMLDropdown(LootMLDropdown)
     SelectedPresetML = (GetPresetMasterLooter() or "")
-    UIDropDownMenu_SetText((SelectedPresetML ~= "" and SelectedPresetML) or ("None/"..(GetRaidLeaderNameForLabel() or "raidlead")), LootMLDropdown)
+    UIDropDownMenu_SetText(LootMLDropdown, (SelectedPresetML ~= "" and SelectedPresetML) or ("None/"..(GetRaidLeaderNameForLabel() or "raidlead")))
     SetDropdownEnabled(LootMLDropdown, InRaid() and IsRL())
   end
   LootFrame:Show()

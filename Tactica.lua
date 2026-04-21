@@ -1372,7 +1372,7 @@ function Tactica:ShowExportRolesFrame()
 
         local outputDrop = CreateFrame("Frame", "TacticaExportOutputDropdown", f, "UIDropDownMenuTemplate")
         outputDrop:SetPoint("LEFT", outputLabel, "RIGHT", -10, 0)
-        UIDropDownMenu_SetWidth(145, outputDrop)
+        UIDropDownMenu_SetWidth(outputDrop, 145)
 
         UIDropDownMenu_Initialize(outputDrop, function()
             local _, opt
@@ -1399,7 +1399,7 @@ function Tactica:ShowExportRolesFrame()
 
         local labelsDrop = CreateFrame("Frame", "TacticaExportLabelsDropdown", f, "UIDropDownMenuTemplate")
         labelsDrop:SetPoint("LEFT", labelsLabel, "RIGHT", -10, 0)
-        UIDropDownMenu_SetWidth(120, labelsDrop)
+        UIDropDownMenu_SetWidth(labelsDrop, 120)
 
         UIDropDownMenu_Initialize(labelsDrop, function()
             local _, opt
