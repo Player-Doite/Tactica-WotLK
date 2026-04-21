@@ -98,9 +98,3 @@ _`/ttpush` or `/tactica pushroles` (raid leaders) broadcast current role list ma
 
 _`/ttclear` or `/tactica clearroles` clear all roles (local; if raid leader, clears for everyone)_
 
-## Special thanks to:
-[jrc13245](https://github.com/jrc13245/) - error catcher
-
-[i2ichardt](https://github.com/i2ichardt) - for code debugging
-
-[Shagu](https://github.com/shagu) - for coding tips
