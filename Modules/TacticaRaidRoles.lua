@@ -34,129 +34,34 @@ local function NotifyBuilder()
   end
 end
 
+-- ElvUI detection
 ------------------------------------------------------------
--- pfUI + SuperWoW detection
-------------------------------------------------------------
-local Tactica_hasPfUI = false
-local Tactica_hasSuperWoW = false
-local Tactica_SuperWoWVersion = nil
+local Tactica_hasElvUI = false
 
-local function Tactica_DetectPfUI()
-  Tactica_hasPfUI = false
+local function Tactica_DetectElvUI()
+  Tactica_hasElvUI = false
   if type(IsAddOnLoaded) == "function" then
-    local ok = IsAddOnLoaded("pfUI")
-    if ok == 1 or ok == true then Tactica_hasPfUI = true end
+    local ok = IsAddOnLoaded("ElvUI")
+    if ok == 1 or ok == true then Tactica_hasElvUI = true end
   end
-  return Tactica_hasPfUI
+  return Tactica_hasElvUI
 end
 
--- SuperWoW detection
-local function Tactica_DetectSuperWoW()
-  Tactica_hasSuperWoW = false
-  Tactica_SuperWoWVersion = nil
-  if type(SUPERWOW_VERSION) == "string" and SUPERWOW_VERSION ~= "" then
-    Tactica_hasSuperWoW = true
-    Tactica_SuperWoWVersion = SUPERWOW_VERSION
-  elseif type(SpellInfo) == "function" or type(SetAutoloot) == "function" or (type(superwow_active) ~= "nil") then
-    Tactica_hasSuperWoW = true
-    Tactica_SuperWoWVersion = "legacy/unknown"
-  end
-  return Tactica_hasSuperWoW, Tactica_SuperWoWVersion
-end
-
--- Simple status slash: prints both pfUI + SuperWoW states
-SLASH_TACTICAPFUI1 = "/tactica_pfui"
-SlashCmdList["TACTICAPFUI"] = function()
-  -- re-detect on demand (in case user toggled addons)
-  Tactica_DetectPfUI()
-  Tactica_DetectSuperWoW()
+-- Simple status slash: prints ElvUI detection state.
+SLASH_TACTICAELVUI1 = "/tactica_elvui"
+SlashCmdList["TACTICAELVUI"] = function()
+  -- Re-detect on demand (in case user toggled addons)
+  Tactica_DetectElvUI()
   local f = (DEFAULT_CHAT_FRAME or ChatFrame1)
-  local pf = Tactica_hasPfUI and "|cff33ff99LOADED|r" or "|cffff5555NOT loaded|r"
-  local sw = Tactica_hasSuperWoW and ("|cff33ff99present|r"..(Tactica_SuperWoWVersion and (" (v"..Tactica_SuperWoWVersion..")") or "")) or "|cffff5555not detected|r"
-  f:AddMessage("|cff33ff99Tactica:|r pfUI: "..pf..",  SuperWoW: "..sw)
-end
-
--- Debug: list/query pfUI tank flags
-SLASH_TACTICAPFUITANKS1 = "/tactica_pfuitanks"
-SlashCmdList["TACTICAPFUITANKS"] = function(msg)
-  local f = DEFAULT_CHAT_FRAME or ChatFrame1
-  local function trim(s) return (string.gsub(s or "", "^%s*(.-)%s*$", "%1")) end
-  if not (pfUI and pfUI.uf and pfUI.uf.raid) then
-    f:AddMessage("|cff33ff99Tactica:|r pfUI not loaded or raid frames missing.")
-    return
-  end
-  pfUI.uf.raid.tankrole = pfUI.uf.raid.tankrole or {}
-  local t = pfUI.uf.raid.tankrole
-  local who = trim(msg)
-  if who ~= "" then
-    f:AddMessage("|cff33ff99Tactica:|r pfUI "..who.." tank? "..tostring(t[who] and true or false)
-      .."  |  TacticaDB "..who.." tank? "..tostring(TacticaDB and TacticaDB.Tanks and TacticaDB.Tanks[who] and true or false))
-    return
-  end
-  local c = 0
-  for n in pairs(t) do c = c + 1; f:AddMessage("pfUI tank: "..n) end
-  if c == 0 then f:AddMessage("|cff33ff99Tactica:|r pfUI: none") end
-end
-
--- Find pfUI's external Tank menu key by button text
-local External_Tank_Key = nil
-local function DetectExternalTankMenuKey()
-  External_Tank_Key = nil
-  if not UnitPopupButtons then return end
-  for k, info in pairs(UnitPopupButtons) do
-    if type(k) == "string" and info and info.text == "Toggle as Tank" and k ~= "TACTICA_TOGGLE_TANK" then
-      External_Tank_Key = k; break
-    end
-  end
+  local elv = Tactica_hasElvUI and "|cff33ff99LOADED|r" or "|cffff5555NOT loaded|r"
+  f:AddMessage("|cff33ff99Tactica:|r ElvUI: " .. elv)
 end
 
 ------------------------------------------------------------
--- pfUI bridge (drive pfUI.uf.raid.tankrole)
+-- Legacy raid-frame bridge stubs (no-op on WotLK/ElvUI setups)
 ------------------------------------------------------------
-local function Pfui_IsReady()
-  return Tactica_hasPfUI and pfUI and pfUI.uf and pfUI.uf.raid
-end
-
-local function Pfui_GetTankTable()
-  if not Pfui_IsReady() then return nil end
-  pfUI.uf.raid.tankrole = pfUI.uf.raid.tankrole or {}
-  return pfUI.uf.raid.tankrole
-end
-
-local function Pfui_RefreshRaid()
-  if pfUI and pfUI.uf and pfUI.uf.raid and pfUI.uf.raid.Show then
-    pfUI.uf.raid:Show()
-  end
-end
-
-local function trim(s) return (string.gsub(s or "", "^%s*(.-)%s*$", "%1")) end
-local function lower(s) return string.lower(s or "") end
-
--- remove all keys that equal name (trimmed, case-insensitive)
-local function Pfui_RemoveAllKeysFor(name)
-  local t = Pfui_GetTankTable(); if not t then return end
-  local tgt = lower(trim(name or ""))
-  for k in pairs(t) do
-    if lower(trim(k)) == tgt then t[k] = nil end
-  end
-end
-
--- Set/remove a single name in pfUI's tankrole table (with duplicate cleanup)
-local function Pfui_SetTank(name, enabled)
-  if not name or name == "" then return end
-  local t = Pfui_GetTankTable(); if not t then return end
-  Pfui_RemoveAllKeysFor(name)
-  if enabled then t[name] = true end
-  Pfui_RefreshRaid()
-end
-
--- Reapply entire Tank list into pfUI
-local function Pfui_ReapplyAllTanks()
-  local t = Pfui_GetTankTable(); if not t then return end
-  for k in pairs(t) do t[k] = nil end
-  for name, v in pairs(TacticaDB.Tanks) do if v then t[name] = true end end
-  Pfui_RefreshRaid()
-end
+local function Pfui_SetTank(name, enabled) end
+local function Pfui_ReapplyAllTanks() end
 
 ------------------------------------------------------------
 -- Menu keys & layout offsets
@@ -170,7 +75,6 @@ local ML_TAG_OFFSET_AFTER_CLASS = -10
 
 -- Tag sits just left of the name
 local OFFSET_BEFORE_NAME_DEFAULT = 2
-local OFFSET_BEFORE_NAME_PFUI    = 1
 local OFFSET_BEFORE_NAME_ACTIVE  = 1
 
 ------------------------------------------------------------
@@ -292,16 +196,13 @@ local function IsUnitOnlineByName(name)
   return true -- fallback
 end
 
--- suppress pfUI writes when click originated from pfUI's own Tank option
-local suppressPfuiWrite = false
-
 -- Set exclusive; clicking the same role again clears it.
 local function SetExclusiveRole(name, role)
   if not name or name == "" then return nil, nil end
   local current = GetCurrentRole(name)
   if current == role then
     ClearAllRolesFor(name)
-    if role == "T" and not suppressPfuiWrite then Pfui_SetTank(name, false) end
+    if role == "T" then Pfui_SetTank(name, false) end
 	NotifyBuilder()
     return nil, (role == "H" and "not marked as Healer")
              or (role == "D" and "not marked as DPS")
@@ -310,13 +211,13 @@ local function SetExclusiveRole(name, role)
     ClearAllRolesFor(name)
     if role == "H" then
       TacticaDB.Healers[name] = true
-      if not suppressPfuiWrite then Pfui_SetTank(name, false) end
+      Pfui_SetTank(name, false)
     elseif role == "D" then
       TacticaDB.DPS[name] = true
-      if not suppressPfuiWrite then Pfui_SetTank(name, false) end
+      Pfui_SetTank(name, false)
     elseif role == "T" then
       TacticaDB.Tanks[name] = true
-      if not suppressPfuiWrite then Pfui_SetTank(name, true) end
+      Pfui_SetTank(name, true)
     else
       return nil, nil
     end
@@ -540,9 +441,7 @@ local function AddMenuButton()
     UnitPopupButtons[BUTTON_KEY_ML] = { text = "Preset Masterlooter", dist = 0 }
   end
 
-  -- Decides whether to HIDE Tactica Tank based on pfUI + SuperWoW
-  -- Rule: only hide if BOTH pfUI and SuperWoW are present.
-  local hideOurTank = (Tactica_hasPfUI and Tactica_hasSuperWoW)
+  local hideOurTank = false
 
   local function ensureItem(menu, key, insertIndex)
     if not menu then return end
@@ -582,10 +481,11 @@ local function AddMenuButton()
   menuInjected = true
 end
 
--- Handle buttons AND pfUI's Tank when present
+-- Handle role menu buttons
 local hookInstalled = false
-local function HandleMenuClick()
-  if not this or not this.value then return end
+local function HandleMenuClick(button)
+  local clicked = button or this
+  if not clicked or not clicked.value then return end
   EnsureDB()
   local inRaid  = UnitInRaid and UnitInRaid("player")
   local inParty = (GetNumPartyMembers and (GetNumPartyMembers() or 0) > 0) and true or false
@@ -598,9 +498,8 @@ local function HandleMenuClick()
   if (not name or name == "") and dropdownFrame.unit then name = UnitName(dropdownFrame.unit) end
   if not name or name == "" then return end
 
-  local key = this.value
+  local key = clicked.value
   local roleWanted = nil
-  local isExternalPfuiTank = false
 
   if key == BUTTON_KEY_HEALER then roleWanted = "H"
   elseif key == BUTTON_KEY_DPS  then roleWanted = "D"
@@ -619,19 +518,10 @@ local function HandleMenuClick()
     local msg = (nextName ~= "") and (nextName .. " preset as ML.") or "Preset ML cleared."
     (DEFAULT_CHAT_FRAME or ChatFrame1):AddMessage("|cff33ff99Tactica:|r " .. msg)
     return
-  elseif Tactica_hasPfUI and External_Tank_Key and key == External_Tank_Key then
-    roleWanted = "T"; isExternalPfuiTank = true
-  else
-    local info = UnitPopupButtons and UnitPopupButtons[key]
-    if Tactica_hasPfUI and info and info.text == "Toggle as Tank" then
-      roleWanted = "T"; isExternalPfuiTank = true
-    end
   end
   if not roleWanted then return end
 
-  if isExternalPfuiTank then suppressPfuiWrite = true end
   local newRole, msg = SetExclusiveRole(name, roleWanted)
-  suppressPfuiWrite = false
 
   if msg then
 	  if type(Tactica_DecorateRaidRoster) == "function" then Tactica_DecorateRaidRoster() end
@@ -709,7 +599,10 @@ local function InstallClickHook()
     hooksecurefunc("UnitPopup_OnClick", HandleMenuClick)
   else
     local orig = UnitPopup_OnClick
-    UnitPopup_OnClick = function() HandleMenuClick(); if orig then orig() end end
+    UnitPopup_OnClick = function(...)
+      HandleMenuClick(...)
+      if orig then orig(...) end
+    end
   end
   hookInstalled = true
 end
@@ -920,7 +813,7 @@ local function InstallPartyHooks()
     else
       local o = PartyMemberFrame_UpdateMember
       PartyMemberFrame_UpdateMember = function(...)
-        if o then o(unpack(arg)) end
+        if o then o(...) end
         if type(Tactica_DecoratePartyFrames) == "function" then Tactica_DecoratePartyFrames() end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
@@ -936,7 +829,7 @@ local function InstallPartyHooks()
     else
       local o2 = PartyMemberFrame_Update
       PartyMemberFrame_Update = function(...)
-        if o2 then o2(unpack(arg)) end
+        if o2 then o2(...) end
         if type(Tactica_DecoratePartyFrames) == "function" then Tactica_DecoratePartyFrames() end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
@@ -952,7 +845,7 @@ local function InstallPartyHooks()
     else
       local op = PlayerFrame_Update
       PlayerFrame_Update = function(...)
-        if op then op(unpack(arg)) end
+        if op then op(...) end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
     end
@@ -1069,6 +962,8 @@ local InstallShowMenuHook
 
 -- one-time install guard (functions are not tables in Lua 5.0)
 local showMenuHookInstalled = false
+local startupInstalled = false
+local elvuiDetectedAnnounced = false
 
 -- ensure SELF menu shows our items only while in PARTY (and NOT in raid)
 local function MenuHasKey(menu, key)
@@ -1129,17 +1024,21 @@ InstallShowMenuHook = function()
     -- Update entries right before menu is shown
     UpdateSelfMenuVisibility()
     if orig then
-      return orig(unpack(arg))
+      return orig(...)
     end
   end
 end
 
 local function AddMenuAndHooks()
+  if startupInstalled then return end
+  startupInstalled = true
   EnsureDB()
-  Tactica_DetectPfUI()
-  Tactica_DetectSuperWoW()
-  DetectExternalTankMenuKey()
-  OFFSET_BEFORE_NAME_ACTIVE = Tactica_hasPfUI and OFFSET_BEFORE_NAME_PFUI or OFFSET_BEFORE_NAME_DEFAULT
+  Tactica_DetectElvUI()
+  OFFSET_BEFORE_NAME_ACTIVE = OFFSET_BEFORE_NAME_DEFAULT
+  if Tactica_hasElvUI and (not elvuiDetectedAnnounced) and (DEFAULT_CHAT_FRAME or ChatFrame1) then
+    elvuiDetectedAnnounced = true
+    (DEFAULT_CHAT_FRAME or ChatFrame1):AddMessage("|cff33ff99Tactica:|r ElvUI detected.")
+  end
   AddMenuButton()
   InstallClickHook()
   UpdateSelfMenuVisibility()
@@ -1197,7 +1096,7 @@ f:SetScript("OnEvent", function()
           TacticaDB.MasterLooter = ""
         end
 
-        -- Keep pfUI tank flags aligned with the cleaned DB
+        -- Keep legacy external raid-frame integration aligned with the cleaned DB
         Pfui_ReapplyAllTanks()
 
         -- Refresh visuals
