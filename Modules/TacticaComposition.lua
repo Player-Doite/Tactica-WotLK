@@ -1039,11 +1039,11 @@ function TC:CreateImportFrame()
   scroll:SetScript("OnMouseDown", FocusImportEdit)
   edit:SetScript("OnMouseDown", FocusImportEdit)
 
-  scroll:SetScript("OnVerticalScroll", function()
-    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(20) end
+  scroll:SetScript("OnVerticalScroll", function(...)
+    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(...) end
   end)
-  edit:SetScript("OnCursorChanged", function()
-    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged() end
+  edit:SetScript("OnCursorChanged", function(...)
+    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(...) end
   end)
 
   btnSetup:SetScript("OnClick", function()
@@ -1064,13 +1064,13 @@ function TC:CreateImportFrame()
     if not HasValidCompositionText(edit:GetText()) then return end
     TC:ShowSplitRaidFrame()
   end)
-  edit:SetScript("OnTextChanged", function()
+  edit:SetScript("OnTextChanged", function(...)
     local lines = countLines(edit:GetText())
     local minH = 320
     local targetH = lines * 14 + 16
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
-    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged() end
+    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(...) end
     local current = edit:GetText()
     local hasInput = trim(current) ~= ""
     local hasValidInput = HasValidCompositionText(current)
