@@ -491,7 +491,12 @@ local function HandleMenuClick(button)
   local inParty = (GetNumPartyMembers and (GetNumPartyMembers() or 0) > 0) and true or false
   if (not inRaid) and (not inParty) then return end
 
-  local dropdownFrame = getglobal(UIDROPDOWNMENU_INIT_MENU or "")
+  -- On WotLK, UIDROPDOWNMENU_INIT_MENU is only reliable during menu build.
+  -- During click handling (especially with hooksecurefunc), OPEN_MENU is the stable source.
+  local dropdownFrame = UIDROPDOWNMENU_OPEN_MENU or UIDROPDOWNMENU_INIT_MENU or (clicked and clicked.owner)
+  if type(dropdownFrame) == "string" then
+    dropdownFrame = getglobal(dropdownFrame)
+  end
   if not dropdownFrame then return end
 
   local name = dropdownFrame.name
