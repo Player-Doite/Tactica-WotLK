@@ -598,7 +598,10 @@ local function InstallClickHook()
     hooksecurefunc("UnitPopup_OnClick", HandleMenuClick)
   else
     local orig = UnitPopup_OnClick
-    UnitPopup_OnClick = function() HandleMenuClick(); if orig then orig() end end
+    UnitPopup_OnClick = function(...)
+      HandleMenuClick()
+      if orig then orig(...) end
+    end
   end
   hookInstalled = true
 end
@@ -809,7 +812,7 @@ local function InstallPartyHooks()
     else
       local o = PartyMemberFrame_UpdateMember
       PartyMemberFrame_UpdateMember = function(...)
-        if o then o(unpack(arg)) end
+        if o then o(...) end
         if type(Tactica_DecoratePartyFrames) == "function" then Tactica_DecoratePartyFrames() end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
@@ -825,7 +828,7 @@ local function InstallPartyHooks()
     else
       local o2 = PartyMemberFrame_Update
       PartyMemberFrame_Update = function(...)
-        if o2 then o2(unpack(arg)) end
+        if o2 then o2(...) end
         if type(Tactica_DecoratePartyFrames) == "function" then Tactica_DecoratePartyFrames() end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
@@ -841,7 +844,7 @@ local function InstallPartyHooks()
     else
       local op = PlayerFrame_Update
       PlayerFrame_Update = function(...)
-        if op then op(unpack(arg)) end
+        if op then op(...) end
         if type(Tactica_DecoratePlayerFrame) == "function" then Tactica_DecoratePlayerFrame() end
       end
     end
@@ -958,6 +961,8 @@ local InstallShowMenuHook
 
 -- one-time install guard (functions are not tables in Lua 5.0)
 local showMenuHookInstalled = false
+local startupInstalled = false
+local elvuiDetectedAnnounced = false
 
 -- ensure SELF menu shows our items only while in PARTY (and NOT in raid)
 local function MenuHasKey(menu, key)
@@ -1018,16 +1023,19 @@ InstallShowMenuHook = function()
     -- Update entries right before menu is shown
     UpdateSelfMenuVisibility()
     if orig then
-      return orig(unpack(arg))
+      return orig(...)
     end
   end
 end
 
 local function AddMenuAndHooks()
+  if startupInstalled then return end
+  startupInstalled = true
   EnsureDB()
   Tactica_DetectElvUI()
   OFFSET_BEFORE_NAME_ACTIVE = OFFSET_BEFORE_NAME_DEFAULT
-  if Tactica_hasElvUI and (DEFAULT_CHAT_FRAME or ChatFrame1) then
+  if Tactica_hasElvUI and (not elvuiDetectedAnnounced) and (DEFAULT_CHAT_FRAME or ChatFrame1) then
+    elvuiDetectedAnnounced = true
     (DEFAULT_CHAT_FRAME or ChatFrame1):AddMessage("|cff33ff99Tactica:|r ElvUI detected.")
   end
   AddMenuButton()
