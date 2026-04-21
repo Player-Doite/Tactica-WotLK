@@ -441,7 +441,6 @@ local function refreshRolesUI()
     PartyMemberFrame_Update()
   end
 
-  if pfUI and pfUI.uf and pfUI.uf.raid and pfUI.uf.raid.Show then pfUI.uf.raid:Show() end
 end
 
 -- RB capacity check (EXCLUDE-AWARE)
