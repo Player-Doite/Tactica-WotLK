@@ -1070,7 +1070,7 @@ function TC:CreateImportFrame()
     local targetH = lines * 14 + 16
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
-    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, ...) end
+    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, scroll) end
     local current = edit:GetText()
     local hasInput = trim(current) ~= ""
     local hasValidInput = HasValidCompositionText(current)
