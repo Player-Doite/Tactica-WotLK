@@ -914,19 +914,19 @@ function TC:ShowImportFrame()
   if not self.importFrame then self:CreateImportFrame() end
   local existing = TacticaDB.Composition.current and TacticaDB.Composition.current.raw or ""
   self.pendingSplitConfig = TacticaDB.Composition.splitConfig
+  self.importFrame._suspendValidation = true
   self.importFrame.input:SetText(existing)
+  self.importFrame._suspendValidation = false
   self.importFrame.input:ClearFocus()
   if self.importFrame.inputScroll and self.importFrame.inputScroll.SetVerticalScroll then
     self.importFrame.inputScroll:SetVerticalScroll(0)
   end
   local hasInput = trim(existing) ~= ""
-  local hasValidInput = HasValidCompositionText(existing)
-  local canSort = hasValidInput and CanManageRaidSubgroups() and (UnitInRaid and UnitInRaid("player"))
   SetButtonEnabled(self.importFrame.submit, hasInput)
   if self.importFrame.btnSetup then SetButtonEnabled(self.importFrame.btnSetup, hasInput) end
-  if self.importFrame.btnKeywordInvite then SetAccentButtonEnabled(self.importFrame.btnKeywordInvite, hasValidInput) end
-  if self.importFrame.btnSortRaid then SetAccentButtonEnabled(self.importFrame.btnSortRaid, canSort) end
-  self:UpdateImportSplitControls(existing)
+  if self.importFrame.btnKeywordInvite then SetAccentButtonEnabled(self.importFrame.btnKeywordInvite, false) end
+  if self.importFrame.btnSortRaid then SetAccentButtonEnabled(self.importFrame.btnSortRaid, false) end
+  if self.importFrame.QueueImportValidation then self.importFrame.QueueImportValidation() end
   if self.setupFrame then self.setupFrame:Hide() end
   self.importFrame:Show()
   self.importFrame:Raise()
@@ -1069,6 +1069,7 @@ function TC:CreateImportFrame()
   -- Coalesce validation/state updates to run once shortly after text input settles.
   local validatePump = nil
   local function QueueImportValidation()
+    if f._suspendValidation then return end
     if validatePump then return end
     local waited = 0
     validatePump = CreateFrame("Frame")
@@ -1114,6 +1115,7 @@ function TC:CreateImportFrame()
   f.btnSortRaid = btnSortRaid
   f.btnSplitRaid = btnSplitRaid
   f.splitDropDown = splitDropDown
+  f.QueueImportValidation = QueueImportValidation
   self.importFrame = f
 end
 
