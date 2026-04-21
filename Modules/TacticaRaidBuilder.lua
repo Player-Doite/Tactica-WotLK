@@ -555,7 +555,7 @@ local function Announce(msg, dryRun, chWorld, chLFG, chYell)
   end
 
   local function FindChanByName(...)
-    local a = arg
+    local a = { ... }
     local i
     for i=1, table.getn(a) do
       local nm = a[i]

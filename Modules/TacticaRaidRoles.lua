@@ -483,8 +483,9 @@ end
 
 -- Handle role menu buttons
 local hookInstalled = false
-local function HandleMenuClick()
-  if not this or not this.value then return end
+local function HandleMenuClick(button)
+  local clicked = button or this
+  if not clicked or not clicked.value then return end
   EnsureDB()
   local inRaid  = UnitInRaid and UnitInRaid("player")
   local inParty = (GetNumPartyMembers and (GetNumPartyMembers() or 0) > 0) and true or false
@@ -497,7 +498,7 @@ local function HandleMenuClick()
   if (not name or name == "") and dropdownFrame.unit then name = UnitName(dropdownFrame.unit) end
   if not name or name == "" then return end
 
-  local key = this.value
+  local key = clicked.value
   local roleWanted = nil
 
   if key == BUTTON_KEY_HEALER then roleWanted = "H"
@@ -599,7 +600,7 @@ local function InstallClickHook()
   else
     local orig = UnitPopup_OnClick
     UnitPopup_OnClick = function(...)
-      HandleMenuClick()
+      HandleMenuClick(...)
       if orig then orig(...) end
     end
   end
