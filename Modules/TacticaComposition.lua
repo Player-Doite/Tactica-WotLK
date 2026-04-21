@@ -1777,7 +1777,7 @@ function TC:CreateSetupFrame()
   local topOffset = 2
   local g
   for g=1,8 do
-    local col = math.mod((g-1), 2)
+    local col = math.fmod((g-1), 2)
     local row = math.floor((g-1) / 2)
     local gf = CreateFrame("Frame", nil, content)
     gf:SetWidth(groupW); gf:SetHeight(groupH)
