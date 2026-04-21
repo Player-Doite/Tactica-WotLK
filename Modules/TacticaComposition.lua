@@ -1039,11 +1039,18 @@ function TC:CreateImportFrame()
   scroll:SetScript("OnMouseDown", FocusImportEdit)
   edit:SetScript("OnMouseDown", FocusImportEdit)
 
-  scroll:SetScript("OnVerticalScroll", function(...)
-    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(scroll, ...) end
+  scroll:SetScript("OnVerticalScroll", function(_, offset)
+    if edit and edit.SetVerticalScroll then
+      edit:SetVerticalScroll(offset or 0)
+    end
   end)
-  edit:SetScript("OnCursorChanged", function(...)
-    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(edit, ...) end
+  edit:SetScript("OnCursorChanged", function(_, _, y)
+    if not (scroll and scroll.SetVerticalScroll) then return end
+    local target = tonumber(y) or 0
+    if target < 0 then target = 0 end
+    local max = (scroll.GetVerticalScrollRange and scroll:GetVerticalScrollRange()) or target
+    if target > max then target = max end
+    scroll:SetVerticalScroll(target)
   end)
 
   btnSetup:SetScript("OnClick", function()
@@ -1097,7 +1104,7 @@ function TC:CreateImportFrame()
     local targetH = lines * 14 + 16
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
-    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, scroll) end
+    if scroll and scroll.UpdateScrollChildRect then scroll:UpdateScrollChildRect() end
     QueueImportValidation()
   end)
   submit:SetScript("OnClick", function()
