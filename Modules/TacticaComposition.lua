@@ -749,7 +749,7 @@ function TC:UpdateImportSplitControls(rawText)
     self.pendingSplitConfig = nil
     if self.importFrame.splitDropDown then
       self.importFrame.splitDropDown:Hide()
-      UIDropDownMenu_SetText("", self.importFrame.splitDropDown)
+      UIDropDownMenu_SetText(self.importFrame.splitDropDown, "")
     end
     return
   end
@@ -780,14 +780,14 @@ function TC:UpdateImportSplitControls(rawText)
           info.notCheckable = 1
           info.func = function()
             self.pendingSplitConfig.activeRaid = selectedIdx
-            UIDropDownMenu_SetText(labels[selectedIdx], self.importFrame.splitDropDown)
+            UIDropDownMenu_SetText(self.importFrame.splitDropDown, labels[selectedIdx])
           end
           UIDropDownMenu_AddButton(info)
         end
       end
     end)
     local activeLabel = labels[cfg.activeRaid] or labels[1]
-    UIDropDownMenu_SetText(activeLabel or "", self.importFrame.splitDropDown)
+    UIDropDownMenu_SetText(self.importFrame.splitDropDown, activeLabel or "")
     self.importFrame.splitDropDown:Show()
   elseif self.importFrame.splitDropDown then
     self.importFrame.splitDropDown:Hide()
@@ -1024,7 +1024,7 @@ function TC:CreateImportFrame()
 
   local splitDropDown = CreateFrame("Frame", "TacticaCompositionImportSplitDropDown", f, "UIDropDownMenuTemplate")
   splitDropDown:SetPoint("LEFT", btnSplitRaid, "RIGHT", -10, -3)
-  UIDropDownMenu_SetWidth(230, splitDropDown)
+  UIDropDownMenu_SetWidth(splitDropDown, 230)
   splitDropDown:Hide()
 
   bg:EnableMouse(true)
@@ -1039,11 +1039,11 @@ function TC:CreateImportFrame()
   scroll:SetScript("OnMouseDown", FocusImportEdit)
   edit:SetScript("OnMouseDown", FocusImportEdit)
 
-  scroll:SetScript("OnVerticalScroll", function()
-    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(20) end
+  scroll:SetScript("OnVerticalScroll", function(...)
+    if ScrollingEdit_OnVerticalScroll then ScrollingEdit_OnVerticalScroll(scroll, ...) end
   end)
-  edit:SetScript("OnCursorChanged", function()
-    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged() end
+  edit:SetScript("OnCursorChanged", function(...)
+    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(edit, ...) end
   end)
 
   btnSetup:SetScript("OnClick", function()
@@ -1064,13 +1064,13 @@ function TC:CreateImportFrame()
     if not HasValidCompositionText(edit:GetText()) then return end
     TC:ShowSplitRaidFrame()
   end)
-  edit:SetScript("OnTextChanged", function()
+  edit:SetScript("OnTextChanged", function(...)
     local lines = countLines(edit:GetText())
     local minH = 320
     local targetH = lines * 14 + 16
     if targetH < minH then targetH = minH end
     edit:SetHeight(targetH)
-    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged() end
+    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(edit, scroll) end
     local current = edit:GetText()
     local hasInput = trim(current) ~= ""
     local hasValidInput = HasValidCompositionText(current)
@@ -1149,7 +1149,7 @@ function TC:RefreshCompositionRows()
 
       row.dd = CreateFrame("Frame", "TacticaCompositionRowDropDown"..i, row, "UIDropDownMenuTemplate")
       row.dd:SetPoint("LEFT", row.add, "RIGHT", -4, -3)
-      UIDropDownMenu_SetWidth(150, row.dd)
+      UIDropDownMenu_SetWidth(row.dd, 150)
 
       row.status = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
       row.status:SetPoint("LEFT", row.dd, "RIGHT", 0, 0)
@@ -1178,7 +1178,7 @@ function TC:RefreshCompositionRows()
         it.text = alias
         it.notCheckable = 1
         it.func = function()
-          UIDropDownMenu_SetText(alias, rowRef.dd)
+          UIDropDownMenu_SetText(rowRef.dd, alias)
         end
         UIDropDownMenu_AddButton(it)
       end
@@ -1188,13 +1188,13 @@ function TC:RefreshCompositionRows()
       clr.notCheckable = 1
       clr.func = function()
         ClearAliases(slotName)
-        UIDropDownMenu_SetText("Select", rowRef.dd)
+        UIDropDownMenu_SetText(rowRef.dd, "Select")
         TC:RefreshCompositionRows()
       end
       UIDropDownMenu_AddButton(clr)
     end)
 
-    UIDropDownMenu_SetText((table.getn(aliases) > 0 and aliases[1]) or "Select", rowRef.dd)
+    UIDropDownMenu_SetText(rowRef.dd, (table.getn(aliases) > 0 and aliases[1]) or "Select")
 
     local autoName = FindAutoMatch(slotName)
     if autoName then
@@ -1202,7 +1202,7 @@ function TC:RefreshCompositionRows()
       local j
       for j=1,table.getn(aliases) do if lower(aliases[j]) == lower(autoName) then isAlias = true end end
       if isAlias then
-        UIDropDownMenu_SetText(autoName, rowRef.dd)
+        UIDropDownMenu_SetText(rowRef.dd, autoName)
         rowRef.input:SetText("")
       else
         rowRef.input:SetText(autoName)
@@ -1648,7 +1648,7 @@ function TC:RefreshSetupFrame()
           info.notCheckable = 1
           info.func = function()
             setOverrideForKey(key, nil)
-            UIDropDownMenu_SetText("Default", slotUI.dd)
+            UIDropDownMenu_SetText(slotUI.dd, "Default")
             self:RefreshSetupFrame()
           end
           UIDropDownMenu_AddButton(info)
@@ -1658,7 +1658,7 @@ function TC:RefreshSetupFrame()
           ei.notCheckable = 1
           ei.func = function()
             setOverrideForKey(key, { kind="empty" })
-            UIDropDownMenu_SetText("Empty", slotUI.dd)
+            UIDropDownMenu_SetText(slotUI.dd, "Empty")
             self:RefreshSetupFrame()
           end
           UIDropDownMenu_AddButton(ei)
@@ -1672,7 +1672,7 @@ function TC:RefreshSetupFrame()
               ri.notCheckable = 1
               ri.func = function()
                 setOverrideForKey(key, { kind="raid", name=picked })
-                UIDropDownMenu_SetText("Other", slotUI.dd)
+                UIDropDownMenu_SetText(slotUI.dd, "Other")
                 self:RefreshSetupFrame()
               end
               UIDropDownMenu_AddButton(ri)
@@ -1689,7 +1689,7 @@ function TC:RefreshSetupFrame()
               si.notCheckable = 1
               si.func = function()
                 setOverrideForKey(key, { kind="slot", sourceKey=sourceKey })
-                UIDropDownMenu_SetText("from "..sourceKey, slotUI.dd)
+                UIDropDownMenu_SetText(slotUI.dd, "from "..sourceKey)
                 self:RefreshSetupFrame()
               end
               UIDropDownMenu_AddButton(si)
@@ -1699,13 +1699,13 @@ function TC:RefreshSetupFrame()
 
         local ov = self.setupOverrides[key]
         if ov and ov.kind == "raid" then
-          UIDropDownMenu_SetText("Other", slotUI.dd)
+          UIDropDownMenu_SetText(slotUI.dd, "Other")
         elseif ov and ov.kind == "empty" then
-          UIDropDownMenu_SetText("Empty", slotUI.dd)
+          UIDropDownMenu_SetText(slotUI.dd, "Empty")
         elseif ov and ov.kind == "slot" then
-          UIDropDownMenu_SetText("from "..tostring(ov.sourceKey or "?"), slotUI.dd)
+          UIDropDownMenu_SetText(slotUI.dd, "from "..tostring(ov.sourceKey or "?"))
         else
-          UIDropDownMenu_SetText("Default", slotUI.dd)
+          UIDropDownMenu_SetText(slotUI.dd, "Default")
         end
       end
     end
@@ -1788,7 +1788,7 @@ function TC:CreateSetupFrame()
 
       local dd = CreateFrame("Frame", "TacticaCompositionSetupDropDownG"..g.."S"..sidx, rowf, "UIDropDownMenuTemplate")
       dd:SetPoint("LEFT", label, "RIGHT", -37, -2)
-      UIDropDownMenu_SetWidth(96, dd)
+      UIDropDownMenu_SetWidth(dd, 96)
 
       f.groupSlots[g][sidx] = { frame=rowf, label=label, dd=dd }
     end
