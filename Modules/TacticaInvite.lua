@@ -663,6 +663,25 @@ local function inviteAndMaybeAssign(name, role, doAssign, skipCapacity)
   local amLead = (IsPartyLeader and IsPartyLeader()) and true or false
   local inRaid = raidN > 0
 
+  -- Permission guard (prevents silent no-op InviteByName failures)
+  local canInvite = true
+  if type(CanInvite) == "function" then
+    local ok = CanInvite()
+    canInvite = (ok == true or ok == 1)
+  else
+    if inRaid then
+      local rl = (IsRaidLeader and (IsRaidLeader() == 1 or IsRaidLeader() == true)) and true or false
+      local ra = (IsRaidOfficer and (IsRaidOfficer() == 1 or IsRaidOfficer() == true)) and true or false
+      canInvite = rl or ra
+    else
+      canInvite = amLead or (partyN == 0)
+    end
+  end
+  if not canInvite then
+    cfmsg("Cannot invite "..name..": you do not have invite permission (need party leader or raid assist/leader).")
+    return
+  end
+
   -- If not in a raid and party is full, convert first and retry invite after conversion
   if (not inRaid) and partyN >= 4 then
     if amLead and ConvertToRaid then
