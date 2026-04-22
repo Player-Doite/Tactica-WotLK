@@ -664,11 +664,16 @@ local function inviteAndMaybeAssign(name, role, doAssign, skipCapacity)
   local inRaid = raidN > 0
 
   -- Permission guard (prevents silent no-op InviteByName failures)
-  local canInvite = true
+  local canInvite = nil
   if type(CanInvite) == "function" then
     local ok = CanInvite()
-    canInvite = (ok == true or ok == 1)
-  else
+    if ok == true or ok == 1 then
+      canInvite = true
+    elseif ok == false or ok == 0 then
+      canInvite = false
+    end
+  end
+  if canInvite == nil then
     if inRaid then
       local rl = (IsRaidLeader and (IsRaidLeader() == 1 or IsRaidLeader() == true)) and true or false
       local ra = (IsRaidOfficer and (IsRaidOfficer() == 1 or IsRaidOfficer() == true)) and true or false
