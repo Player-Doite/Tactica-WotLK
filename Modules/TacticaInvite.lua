@@ -621,7 +621,18 @@ end
 
 -- invite helpers
 local function inviteByName(name)
-  if InviteByName then InviteByName(name) end
+  if not name or name == "" then return end
+  -- WotLK/3.3.5: InviteUnit is the canonical API.
+  if type(InviteUnit) == "function" then
+    InviteUnit(name)
+    return
+  end
+  -- Fallback for older/legacy clients.
+  if type(InviteByName) == "function" then
+    InviteByName(name)
+    return
+  end
+  cfmsg("Invite API not found on this client (InviteUnit/InviteByName unavailable).")
 end
 
 local function ScheduleReinvite(name, role, doAssign, skipCapacity)
