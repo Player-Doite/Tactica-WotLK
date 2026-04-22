@@ -1080,8 +1080,8 @@ function TC:CreateImportFrame()
     if validatePump then return end
     local waited = 0
     validatePump = CreateFrame("Frame")
-    validatePump:SetScript("OnUpdate", function()
-      waited = waited + (arg1 or 0)
+    validatePump:SetScript("OnUpdate", function(_, elapsed)
+      waited = waited + (elapsed or 0)
       if waited < 0.08 then return end
       validatePump:SetScript("OnUpdate", nil)
       validatePump = nil

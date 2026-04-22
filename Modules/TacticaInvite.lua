@@ -622,17 +622,11 @@ end
 -- invite helpers
 local function inviteByName(name)
   if not name or name == "" then return end
-  -- WotLK/3.3.5: InviteUnit is the canonical API.
-  if type(InviteUnit) == "function" then
-    InviteUnit(name)
+  if type(InviteUnit) ~= "function" then
+    cfmsg("InviteUnit API unavailable on this client.")
     return
   end
-  -- Fallback for older/legacy clients.
-  if type(InviteByName) == "function" then
-    InviteByName(name)
-    return
-  end
-  cfmsg("Invite API not found on this client (InviteUnit/InviteByName unavailable).")
+  InviteUnit(name)
 end
 
 local function ScheduleReinvite(name, role, doAssign, skipCapacity)
@@ -674,7 +668,7 @@ local function inviteAndMaybeAssign(name, role, doAssign, skipCapacity)
   local amLead = (IsPartyLeader and IsPartyLeader()) and true or false
   local inRaid = raidN > 0
 
-  -- Permission guard (prevents silent no-op InviteByName failures)
+  -- Permission guard (prevents silent no-op invite failures)
   local canInvite = nil
   if type(CanInvite) == "function" then
     local ok = CanInvite()
