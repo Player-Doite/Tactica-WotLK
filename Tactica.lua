@@ -596,8 +596,8 @@ function Tactica:HandleTargetChange()
     
     -- Show the frame and force update both dropdowns
     self.postFrame:Show()
-    UIDropDownMenu_SetText(raidName, TacticaPostRaidDropdown)
-    UIDropDownMenu_SetText(bossName, TacticaPostBossDropdown)
+    UIDropDownMenu_SetText(TacticaPostRaidDropdown, raidName)
+    UIDropDownMenu_SetText(TacticaPostBossDropdown, bossName)
     self:UpdatePostTacticDropdown(raidName, bossName)
 end
 
@@ -1372,7 +1372,7 @@ function Tactica:ShowExportRolesFrame()
 
         local outputDrop = CreateFrame("Frame", "TacticaExportOutputDropdown", f, "UIDropDownMenuTemplate")
         outputDrop:SetPoint("LEFT", outputLabel, "RIGHT", -10, 0)
-        UIDropDownMenu_SetWidth(145, outputDrop)
+        UIDropDownMenu_SetWidth(outputDrop, 145)
 
         UIDropDownMenu_Initialize(outputDrop, function()
             local _, opt
@@ -1385,7 +1385,7 @@ function Tactica:ShowExportRolesFrame()
                         local picked = this and this.value or opt.value
                         local selectedOpt = TacticaGetExportFormatOption(picked)
                         TacticaDB.Settings.ExportFormat = selectedOpt.value
-                        UIDropDownMenu_SetText(selectedOpt.text, outputDrop)
+                        UIDropDownMenu_SetText(outputDrop, selectedOpt.text)
                         FillExportData()
                         CloseDropDownMenus()
                     end
@@ -1399,7 +1399,7 @@ function Tactica:ShowExportRolesFrame()
 
         local labelsDrop = CreateFrame("Frame", "TacticaExportLabelsDropdown", f, "UIDropDownMenuTemplate")
         labelsDrop:SetPoint("LEFT", labelsLabel, "RIGHT", -10, 0)
-        UIDropDownMenu_SetWidth(120, labelsDrop)
+        UIDropDownMenu_SetWidth(labelsDrop, 120)
 
         UIDropDownMenu_Initialize(labelsDrop, function()
             local _, opt
@@ -1412,7 +1412,7 @@ function Tactica:ShowExportRolesFrame()
                         local picked = this and this.value
                         if picked == nil then picked = opt.value end
                         TacticaDB.Settings.ExportIncludeLabels = (picked == true)
-                        UIDropDownMenu_SetText(TacticaGetExportLabelText(TacticaDB.Settings.ExportIncludeLabels), labelsDrop)
+                        UIDropDownMenu_SetText(labelsDrop, TacticaGetExportLabelText(TacticaDB.Settings.ExportIncludeLabels))
                         FillExportData()
                         CloseDropDownMenus()
                     end
@@ -1427,8 +1427,8 @@ function Tactica:ShowExportRolesFrame()
     end
 
     local currentOpt = TacticaGetExportFormat()
-    UIDropDownMenu_SetText(currentOpt.text, self.exportOutputDropdown)
-    UIDropDownMenu_SetText(TacticaGetExportLabelText(TacticaGetExportIncludeLabels()), self.exportLabelsDropdown)
+    UIDropDownMenu_SetText(self.exportOutputDropdown, currentOpt.text)
+    UIDropDownMenu_SetText(self.exportLabelsDropdown, TacticaGetExportLabelText(TacticaGetExportIncludeLabels()))
     FillExportData()
 
     -- Show the frame
@@ -1610,7 +1610,7 @@ function Tactica:UpdateBossDropdown(raidName)
     
     -- Reset selections
     Tactica.selectedBoss = nil
-    UIDropDownMenu_SetText("Select Boss", TacticaBossDropdown)
+    UIDropDownMenu_SetText(TacticaBossDropdown, "Select Boss")
     
     -- Get all bosses for this raid from both default and custom data
     local bosses = {}
@@ -1637,7 +1637,7 @@ function Tactica:UpdateBossDropdown(raidName)
                 text = bossName,
                 func = function()
                     Tactica.selectedBoss = bossName
-                    UIDropDownMenu_SetText(bossName, TacticaBossDropdown)
+                    UIDropDownMenu_SetText(TacticaBossDropdown, bossName)
                 end
             }
             UIDropDownMenu_AddButton(info)
@@ -1704,7 +1704,7 @@ function Tactica:CreateAddFrame()
                     text = raidName,
                     func = function()
                         Tactica.selectedRaid = raidName
-                        UIDropDownMenu_SetText(raidName, TacticaRaidDropdown)
+                        UIDropDownMenu_SetText(TacticaRaidDropdown, raidName)
                         Tactica:UpdateBossDropdown(raidName)
                     end
                 }
@@ -1714,17 +1714,17 @@ function Tactica:CreateAddFrame()
         
         -- Set initial raid text (respecting any selection that might have been set before showing)
         if Tactica.selectedRaid then
-            UIDropDownMenu_SetText(Tactica.selectedRaid, TacticaRaidDropdown)
+            UIDropDownMenu_SetText(TacticaRaidDropdown, Tactica.selectedRaid)
             Tactica:UpdateBossDropdown(Tactica.selectedRaid)
         else
-            UIDropDownMenu_SetText("Select Raid", TacticaRaidDropdown)
+            UIDropDownMenu_SetText(TacticaRaidDropdown, "Select Raid")
         end
         
         -- Set initial boss text
         if Tactica.selectedBoss then
-            UIDropDownMenu_SetText(Tactica.selectedBoss, TacticaBossDropdown)
+            UIDropDownMenu_SetText(TacticaBossDropdown, Tactica.selectedBoss)
         else
-            UIDropDownMenu_SetText("Select Boss", TacticaBossDropdown)
+            UIDropDownMenu_SetText(TacticaBossDropdown, "Select Boss")
         end
     end)
 
@@ -1840,8 +1840,8 @@ function Tactica:ShowAddPopup()
     -- Reset selections
     Tactica.selectedRaid = nil
     Tactica.selectedBoss = nil
-    UIDropDownMenu_SetText("Select Raid", TacticaRaidDropdown)
-    UIDropDownMenu_SetText("Select Boss", TacticaBossDropdown)
+    UIDropDownMenu_SetText(TacticaRaidDropdown, "Select Raid")
+    UIDropDownMenu_SetText(TacticaBossDropdown, "Select Boss")
     
     -- Reset fields
     getglobal("TacticaNameEdit"):SetText("")
@@ -2023,7 +2023,7 @@ function Tactica:CreatePostFrame()
                     text = r,
                     func = function()
                         Tactica.selectedRaid = r
-                        UIDropDownMenu_SetText(r, TacticaPostRaidDropdown)
+                        UIDropDownMenu_SetText(TacticaPostRaidDropdown, r)
                         Tactica:UpdatePostBossDropdown(r)
                     end
                 }
@@ -2032,9 +2032,9 @@ function Tactica:CreatePostFrame()
         end)
         
         -- Set initial texts
-        UIDropDownMenu_SetText(Tactica.selectedRaid or "Select Raid", TacticaPostRaidDropdown)
-        UIDropDownMenu_SetText(Tactica.selectedBoss or "Select Boss", TacticaPostBossDropdown)
-        UIDropDownMenu_SetText("Select Tactic (opt.)", TacticaPostTacticDropdown)
+        UIDropDownMenu_SetText(TacticaPostRaidDropdown, Tactica.selectedRaid or "Select Raid")
+        UIDropDownMenu_SetText(TacticaPostBossDropdown, Tactica.selectedBoss or "Select Boss")
+        UIDropDownMenu_SetText(TacticaPostTacticDropdown, "Select Tactic (opt.)")
 		
 		if TacticaAutoPostCheckbox then
 			TacticaAutoPostCheckbox:SetChecked(
@@ -2226,7 +2226,7 @@ function Tactica:CreateRemoveFrame()
                         text = raidName,
                         func = function()
                             Tactica.selectedRaid = raidName
-                            UIDropDownMenu_SetText(raidName, TacticaRemoveRaidDropdown)
+                            UIDropDownMenu_SetText(TacticaRemoveRaidDropdown, raidName)
                             Tactica:UpdateRemoveBossDropdown(raidName)
                         end
                     }
@@ -2246,24 +2246,24 @@ function Tactica:CreateRemoveFrame()
         
         -- Set initial raid text
         if Tactica.selectedRaid and TacticaDB.CustomTactics[Tactica.selectedRaid] then
-            UIDropDownMenu_SetText(Tactica.selectedRaid, TacticaRemoveRaidDropdown)
+            UIDropDownMenu_SetText(TacticaRemoveRaidDropdown, Tactica.selectedRaid)
             Tactica:UpdateRemoveBossDropdown(Tactica.selectedRaid)
         else
-            UIDropDownMenu_SetText("Select Raid", TacticaRemoveRaidDropdown)
+            UIDropDownMenu_SetText(TacticaRemoveRaidDropdown, "Select Raid")
         end
         
         -- Set initial boss text
         if Tactica.selectedBoss and Tactica.selectedRaid and 
            TacticaDB.CustomTactics[Tactica.selectedRaid] and 
            TacticaDB.CustomTactics[Tactica.selectedRaid][Tactica.selectedBoss] then
-            UIDropDownMenu_SetText(Tactica.selectedBoss, TacticaRemoveBossDropdown)
+            UIDropDownMenu_SetText(TacticaRemoveBossDropdown, Tactica.selectedBoss)
             Tactica:UpdateRemoveTacticDropdown(Tactica.selectedRaid, Tactica.selectedBoss)
         else
-            UIDropDownMenu_SetText("Select Boss", TacticaRemoveBossDropdown)
+            UIDropDownMenu_SetText(TacticaRemoveBossDropdown, "Select Boss")
         end
         
         -- Set initial tactic text
-        UIDropDownMenu_SetText("Select Tactic", TacticaRemoveTacticDropdown)
+        UIDropDownMenu_SetText(TacticaRemoveTacticDropdown, "Select Tactic")
     end)
 
     -- Remove button
@@ -2307,8 +2307,8 @@ function Tactica:UpdatePostBossDropdown(raidName)
     
     -- Reset selections
     Tactica.selectedBoss = nil
-    UIDropDownMenu_SetText("Select Boss", TacticaPostBossDropdown)
-    UIDropDownMenu_SetText("Select Tactic (opt.)", TacticaPostTacticDropdown)
+    UIDropDownMenu_SetText(TacticaPostBossDropdown, "Select Boss")
+    UIDropDownMenu_SetText(TacticaPostTacticDropdown, "Select Tactic (opt.)")
     
     -- Get all bosses for this raid from both default and custom data
     local bosses = {}
@@ -2335,7 +2335,7 @@ function Tactica:UpdatePostBossDropdown(raidName)
                 text = bossName,
                 func = function()
                     Tactica.selectedBoss = bossName
-                    UIDropDownMenu_SetText(bossName, TacticaPostBossDropdown)
+                    UIDropDownMenu_SetText(TacticaPostBossDropdown, bossName)
                     Tactica:UpdatePostTacticDropdown(raidName, bossName)
                 end
             }
@@ -2348,7 +2348,7 @@ function Tactica:UpdatePostTacticDropdown(raidName, bossName)
     local tacticDropdown = getglobal("TacticaPostTacticDropdown")
     
     -- Reset selection
-    UIDropDownMenu_SetText("Select Tactic (opt.)", TacticaPostTacticDropdown)
+    UIDropDownMenu_SetText(TacticaPostTacticDropdown, "Select Tactic (opt.)")
     
     -- Initialize tactic dropdown with all available tactics for this boss
     UIDropDownMenu_Initialize(tacticDropdown, function()
@@ -2356,7 +2356,7 @@ function Tactica:UpdatePostTacticDropdown(raidName, bossName)
         local info = {
             text = "Default",
             func = function()
-                UIDropDownMenu_SetText("Default", TacticaPostTacticDropdown)
+                UIDropDownMenu_SetText(TacticaPostTacticDropdown, "Default")
             end
         }
         UIDropDownMenu_AddButton(info)
@@ -2369,7 +2369,7 @@ function Tactica:UpdatePostTacticDropdown(raidName, bossName)
                     local info = {
                         text = tacticName,
                         func = function()
-                            UIDropDownMenu_SetText(tacticName, TacticaPostTacticDropdown)
+                            UIDropDownMenu_SetText(TacticaPostTacticDropdown, tacticName)
                         end
                     }
                     UIDropDownMenu_AddButton(info)
@@ -2386,7 +2386,7 @@ function Tactica:UpdatePostTacticDropdown(raidName, bossName)
                     local info = {
                         text = tacticName,
                         func = function()
-                            UIDropDownMenu_SetText(tacticName, TacticaPostTacticDropdown)
+                            UIDropDownMenu_SetText(TacticaPostTacticDropdown, tacticName)
                         end
                     }
                     UIDropDownMenu_AddButton(info)
@@ -2405,16 +2405,16 @@ function Tactica:ShowPostPopup(isManual)
         -- For manual calls, reset selections
         self.selectedRaid = nil
         self.selectedBoss = nil
-        UIDropDownMenu_SetText("Select Raid", TacticaPostRaidDropdown)
-        UIDropDownMenu_SetText("Select Boss", TacticaPostBossDropdown)
+        UIDropDownMenu_SetText(TacticaPostRaidDropdown, "Select Raid")
+        UIDropDownMenu_SetText(TacticaPostBossDropdown, "Select Boss")
     else
         -- For automatic calls, use the preselected values
         if self.selectedRaid then
-            UIDropDownMenu_SetText(self.selectedRaid, TacticaPostRaidDropdown)
+            UIDropDownMenu_SetText(TacticaPostRaidDropdown, self.selectedRaid)
             self:UpdatePostBossDropdown(self.selectedRaid)
             
             if self.selectedBoss then
-                UIDropDownMenu_SetText(self.selectedBoss, TacticaPostBossDropdown)
+                UIDropDownMenu_SetText(TacticaPostBossDropdown, self.selectedBoss)
                 self:UpdatePostTacticDropdown(self.selectedRaid, self.selectedBoss)
             end
         end
@@ -2433,8 +2433,8 @@ function Tactica:UpdateRemoveBossDropdown(raidName)
     
     -- Reset selections
     Tactica.selectedBoss = nil
-    UIDropDownMenu_SetText("Select Boss", TacticaRemoveBossDropdown)
-    UIDropDownMenu_SetText("Select Tactic", TacticaRemoveTacticDropdown)
+    UIDropDownMenu_SetText(TacticaRemoveBossDropdown, "Select Boss")
+    UIDropDownMenu_SetText(TacticaRemoveTacticDropdown, "Select Tactic")
     
     -- Get all bosses for this raid that have custom tactics
     local bosses = {}
@@ -2453,7 +2453,7 @@ function Tactica:UpdateRemoveBossDropdown(raidName)
                 text = bossName,
                 func = function()
                     Tactica.selectedBoss = bossName
-                    UIDropDownMenu_SetText(bossName, TacticaRemoveBossDropdown)
+                    UIDropDownMenu_SetText(TacticaRemoveBossDropdown, bossName)
                     Tactica:UpdateRemoveTacticDropdown(raidName, bossName)
                 end
             }
@@ -2466,7 +2466,7 @@ function Tactica:UpdateRemoveTacticDropdown(raidName, bossName)
     local tacticDropdown = getglobal("TacticaRemoveTacticDropdown")
     
     -- Reset selection
-    UIDropDownMenu_SetText("Select Tactic", TacticaRemoveTacticDropdown)
+    UIDropDownMenu_SetText(TacticaRemoveTacticDropdown, "Select Tactic")
     
     -- Initialize tactic dropdown with custom tactics for this boss
     UIDropDownMenu_Initialize(tacticDropdown, function()
@@ -2476,7 +2476,7 @@ function Tactica:UpdateRemoveTacticDropdown(raidName, bossName)
                 local info = {
                     text = tacticName,
                     func = function()
-                        UIDropDownMenu_SetText(tacticName, TacticaRemoveTacticDropdown)
+                        UIDropDownMenu_SetText(TacticaRemoveTacticDropdown, tacticName)
                     end
                 }
                 UIDropDownMenu_AddButton(info)
@@ -2491,9 +2491,9 @@ function Tactica:ShowRemovePopup()
     end
     
     -- Reset selections but keep any previously selected raid/boss
-    UIDropDownMenu_SetText(Tactica.selectedRaid or "Select Raid", TacticaRemoveRaidDropdown)
-    UIDropDownMenu_SetText(Tactica.selectedBoss or "Select Boss", TacticaRemoveBossDropdown)
-    UIDropDownMenu_SetText("Select Tactic", TacticaRemoveTacticDropdown)
+    UIDropDownMenu_SetText(TacticaRemoveRaidDropdown, Tactica.selectedRaid or "Select Raid")
+    UIDropDownMenu_SetText(TacticaRemoveBossDropdown, Tactica.selectedBoss or "Select Boss")
+    UIDropDownMenu_SetText(TacticaRemoveTacticDropdown, "Select Tactic")
     
     -- If selected raid with custom tactics, update boss dropdown
     if Tactica.selectedRaid and TacticaDB.CustomTactics[Tactica.selectedRaid] then
