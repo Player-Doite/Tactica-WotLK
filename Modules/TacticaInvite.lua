@@ -441,7 +441,6 @@ local function refreshRolesUI()
     PartyMemberFrame_Update()
   end
 
-  if pfUI and pfUI.uf and pfUI.uf.raid and pfUI.uf.raid.Show then pfUI.uf.raid:Show() end
 end
 
 -- RB capacity check (EXCLUDE-AWARE)
@@ -622,7 +621,12 @@ end
 
 -- invite helpers
 local function inviteByName(name)
-  if InviteByName then InviteByName(name) end
+  if not name or name == "" then return end
+  if type(InviteUnit) ~= "function" then
+    cfmsg("InviteUnit API unavailable on this client.")
+    return
+  end
+  InviteUnit(name)
 end
 
 local function ScheduleReinvite(name, role, doAssign, skipCapacity)
@@ -663,6 +667,30 @@ local function inviteAndMaybeAssign(name, role, doAssign, skipCapacity)
   local partyN = (GetNumPartyMembers and GetNumPartyMembers() or 0)
   local amLead = (IsPartyLeader and IsPartyLeader()) and true or false
   local inRaid = raidN > 0
+
+  -- Permission guard (prevents silent no-op invite failures)
+  local canInvite = nil
+  if type(CanInvite) == "function" then
+    local ok = CanInvite()
+    if ok == true or ok == 1 then
+      canInvite = true
+    elseif ok == false or ok == 0 then
+      canInvite = false
+    end
+  end
+  if canInvite == nil then
+    if inRaid then
+      local rl = (IsRaidLeader and (IsRaidLeader() == 1 or IsRaidLeader() == true)) and true or false
+      local ra = (IsRaidOfficer and (IsRaidOfficer() == 1 or IsRaidOfficer() == true)) and true or false
+      canInvite = rl or ra
+    else
+      canInvite = amLead or (partyN == 0)
+    end
+  end
+  if not canInvite then
+    cfmsg("Cannot invite "..name..": you do not have invite permission (need party leader or raid assist/leader).")
+    return
+  end
 
   -- If not in a raid and party is full, convert first and retry invite after conversion
   if (not inRaid) and partyN >= 4 then
