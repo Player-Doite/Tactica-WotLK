@@ -74,9 +74,20 @@ local function RunLaterTactica(delay, fn)
   _laterFrame:Show()
 end
 
+local function Tactica_NormalizeAddonChannel(channel)
+  local ch = string.upper(tostring(channel or ""))
+  if ch == "RAID" or ch == "PARTY" or ch == "GUILD" or ch == "OFFICER" or ch == "BATTLEGROUND" then
+    return ch
+  end
+  if ch == "RAID_LEADER" or ch == "RAID_WARNING" then return "RAID" end
+  if ch == "PARTY_LEADER" then return "PARTY" end
+  return nil
+end
+
 local function Tactica_BroadcastVersion(channel)
   local msg = "VER:" .. Tactica_GetVersion()
-  if SendAddonMessage then SendAddonMessage(TACTICA_PREFIX, msg, channel) end
+  local ch = Tactica_NormalizeAddonChannel(channel)
+  if SendAddonMessage and ch then SendAddonMessage(TACTICA_PREFIX, msg, ch) end
 end
 
 local function Tactica_BroadcastVersionAll()
@@ -129,7 +140,8 @@ local function Tactica_OnAddonMessageVersion(prefix, text, sender, channel)
     local me = UnitName and UnitName("player") or nil
     if sender ~= me and channel then
       local now = (GetTime and GetTime()) or 0
-      if now - _verLastEcho > 10 then _verLastEcho = now; SendAddonMessage("TACTICA", "TACTICA_VER:"..tostring(mine), channel) end
+      local ch = Tactica_NormalizeAddonChannel(channel)
+      if ch and now - _verLastEcho > 10 then _verLastEcho = now; SendAddonMessage("TACTICA", "TACTICA_VER:"..tostring(mine), ch) end
     end
     return
   end
@@ -138,7 +150,8 @@ local function Tactica_OnAddonMessageVersion(prefix, text, sender, channel)
     local _, _, requester, rid = string.find(payload, "^([^:]+)%:(.+)$")
     if requester and requester ~= "" and rid and rid ~= "" and channel then
       local msg = "TACTICA_ME:" .. tostring(requester) .. ":" .. tostring(rid) .. ":" .. tostring(mine)
-      if SendAddonMessage then SendAddonMessage(TACTICA_PREFIX, msg, channel) end
+      local ch = Tactica_NormalizeAddonChannel(channel)
+      if SendAddonMessage and ch then SendAddonMessage(TACTICA_PREFIX, msg, ch) end
     end
     return
   end
