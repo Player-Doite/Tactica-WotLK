@@ -556,6 +556,16 @@ SlashCmdList["TACTICA"] = function(msg)
     Tactica:CommandHandler(msg);
 end
 
+SLASH_TTPUSH1 = "/ttpush"
+SlashCmdList["TTPUSH"] = function()
+    Tactica:CommandHandler("pushroles")
+end
+
+SLASH_TTCLEAR1 = "/ttclear"
+SlashCmdList["TTCLEAR"] = function()
+    Tactica:CommandHandler("clearroles")
+end
+
 function Tactica:HandleTargetChange()
     -- Clear recently posted if player died (wipe detection)
     if UnitIsDead("player") then
@@ -2721,6 +2731,7 @@ end
 
 -- /tt_loot: Shows loot frame
 SLASH_TTACTICALOOT1 = "/tt_loot"
+SLASH_TTACTICALOOT2 = "/tactica_loot"
 SlashCmdList["TTACTICALOOT"] = function()
   if TacticaLoot_ShowPopup then
     TacticaLoot_ShowPopup()
