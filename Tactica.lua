@@ -2959,6 +2959,12 @@ Tactica.DefaultData = {
         ["Ragefire Trogg"] = {
             ["Default"] = ""
         },
+        ["Volchan"] = {
+            ["Default"] = ""
+        },
+        ["Ragefire Trogg"] = {
+            ["Default"] = ""
+        },
         ["Azuregos"] = {
             ["Default"] = ""
         },

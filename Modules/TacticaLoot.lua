@@ -459,6 +459,24 @@ local function MarkLootMobDeath(name)
   return completedBossKey
 end
 
+local function TryStartTrackingFromCurrentTarget()
+  local targetName = UnitName and UnitName("target") or nil
+  if not targetName or targetName == "" then return false end
+  BuildBossNameSet()
+  if not BossLootRequirements then return false end
+  local key = string.lower(targetName)
+  local cfg = BossLootRequirements[key]
+  if not cfg then return false end
+
+  TL_AwaitingLoot   = true
+  TL_SlotsRemaining = nil
+  TL_SawLootWindow  = false
+  TL_OpenedLootMob  = nil
+  TL_EmptiedLootMobs = {}
+  TL_ActiveLootReq = cfg.req
+  return true
+end
+
 -- Core entry when boss is targeted (from Tactica.lua)
 function TacticaLoot_OnBossTargeted(raidName, bossName)
   EnsureLootDefaults()
@@ -531,7 +549,9 @@ f:SetScript("OnEvent", function()
     end
 
   elseif event == "LOOT_OPENED" then
-    if not TL_AwaitingLoot then return end
+    if not TL_AwaitingLoot then
+      if not TryStartTrackingFromCurrentTarget() then return end
+    end
     TL_SawLootWindow = true
     TL_SlotsRemaining = CountRemainingLootSlots()
     TL_OpenedLootMob = nil
