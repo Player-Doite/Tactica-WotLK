@@ -521,6 +521,7 @@ end
 local function BuildLFM(raidLabelForMsg, raidSize, tanksWant, healersWant, srsWant, hrText, canSum, freeText, hideNeed)
   local needM, needStr = BuildNeedString(raidSize, tanksWant, healersWant, hideNeed)
 
+  local hasLootRules = (srsWant == nil) or (srsWant >= 0)
   local srTxt  = (srsWant and srsWant > 0) and (srsWant .. "xSR") or "No SR"
   local hrTxt  = (hrText and hrText ~= "") and (" (HR " .. hrText .. ")") or ""
   local sumTxt = canSum and " - Can Sum" or ""
@@ -534,15 +535,17 @@ local function BuildLFM(raidLabelForMsg, raidSize, tanksWant, healersWant, srsWa
 	  head = "LF" .. needM .. "M for " .. raidLabelForMsg .. sumTxt
 	end
 
-  local msg = head .. " - " .. srTxt .. " > MS > OS" .. hrTxt .. needStr .. freeTxt
+  local lootTxt = hasLootRules and (" - " .. srTxt .. " > MS > OS") or ""
+  local msg = head .. lootTxt .. hrTxt .. needStr .. freeTxt
   if string.len(msg) <= 255 then return msg end
 
   local shortHead = (hideNeed or needM == 0)
 	  and ("LFM@" .. raidLabelForMsg .. sumTxt)
 	  or  ("LF" .. needM .. "M@" .. raidLabelForMsg .. sumTxt)
-  local msg2  = shortHead .. " - " .. srTxt .. ">MS>OS" .. hrTxt .. needStr .. freeTxt
+  local lootTxtShort = hasLootRules and (" - " .. srTxt .. ">MS>OS") or ""
+  local msg2  = shortHead .. lootTxtShort .. hrTxt .. needStr .. freeTxt
   if string.len(msg2) <= 255 then return msg2 end
-  local msg3  = shortHead .. " " .. srTxt .. hrTxt .. needStr .. freeTxt
+  local msg3  = shortHead .. (hasLootRules and (" " .. srTxt) or "") .. hrTxt .. needStr .. freeTxt
   if string.len(msg3) <= 255 then return msg3 end
   return string.sub(shortHead .. needStr .. freeTxt, 1, 255)
 end
@@ -555,7 +558,7 @@ local function Announce(msg, dryRun, chWorld, chLFG, chYell)
   end
 
   local function FindChanByName(...)
-    local a = arg
+    local a = { ... }
     local i
     for i=1, table.getn(a) do
       local nm = a[i]
@@ -694,7 +697,7 @@ function RB.ApplySaved()
   if S.healers ~= nil then RB.state.healers = S.healers
   elseif RB.state.size_selected then RB.state.healers = d.healers else RB.state.healers = nil end
 
-  RB.state.srs      = (S.srs ~= nil) and S.srs or (d.srs or 0)
+  RB.state.srs      = (S.srs ~= nil) and S.srs or (d.srs or -1)
   RB.state.hr       = S.hr    or ""
   RB.state.free     = S.free  or ""
   RB.state.canSum   = S.canSum and true or false
@@ -851,7 +854,7 @@ local function InitNumberDropdown(drop, label, fromN, toN, assign)
       info.func=function()
         local picked = this and this.value or n
         assign(picked)
-        UIDropDownMenu_SetText(picked .. " " .. label, drop)
+        UIDropDownMenu_SetText(drop, picked .. " " .. label)
         RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
       end
       UIDropDownMenu_AddButton(info)
@@ -884,9 +887,9 @@ function RB.InitRaidDropdown()
         RB.state.size = nil; RB.state.size_selected = false
         RB.state.tanks, RB.state.healers = nil, nil
 
-        -- For CUSTOM: do not default SR either
+        -- For CUSTOM: default to "No loot rules"
         if picked == "-CUSTOM-" then
-          RB.state.srs = nil
+          RB.state.srs = -1
           -- keep customRaidText as-is; user can type / edit
         else
           RB.state.srs = 0
@@ -912,12 +915,12 @@ function RB.InitRaidDropdown()
         end
 
         UIDropDownMenu_SetSelectedValue(RB.ddRaid, picked)
-        UIDropDownMenu_SetText(picked, RB.ddRaid)
+        UIDropDownMenu_SetText(RB.ddRaid, picked)
 
-        UIDropDownMenu_SetText("Select Size", RB.ddSize); if RB.editCustomSize then RB.editCustomSize:Hide() end
-        UIDropDownMenu_SetText("Pick Size first", RB.ddTanks)
-        UIDropDownMenu_SetText("Pick Size first", RB.ddHealers)
-        UIDropDownMenu_SetText("Pick Size first", RB.ddSRs)
+        UIDropDownMenu_SetText(RB.ddSize, "Select Size"); if RB.editCustomSize then RB.editCustomSize:Hide() end
+        UIDropDownMenu_SetText(RB.ddTanks, "Pick Size first")
+        UIDropDownMenu_SetText(RB.ddHealers, "Pick Size first")
+        UIDropDownMenu_SetText(RB.ddSRs, "Pick Size first")
 
         RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
         RB.InitSizeDropdown()
@@ -929,9 +932,9 @@ function RB.InitRaidDropdown()
 
   if RB.state.raid then
     UIDropDownMenu_SetSelectedValue(RB.ddRaid, RB.state.raid)
-    UIDropDownMenu_SetText(RB.state.raid, RB.ddRaid)
+    UIDropDownMenu_SetText(RB.ddRaid, RB.state.raid)
   else
-    UIDropDownMenu_SetText("Select Raid", RB.ddRaid)
+    UIDropDownMenu_SetText(RB.ddRaid, "Select Raid")
   end
 end
 
@@ -952,7 +955,7 @@ function RB.InitWBossDropdown()
         local picked = this and this.value or nm
         RB.state.worldBoss = picked
         UIDropDownMenu_SetSelectedValue(RB.ddWBoss, picked)
-        UIDropDownMenu_SetText(picked, RB.ddWBoss)
+        UIDropDownMenu_SetText(RB.ddWBoss, picked)
         RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
         RB.InitGearScaleDropdown()
       end
@@ -961,9 +964,9 @@ function RB.InitWBossDropdown()
   end)
   if RB.state.worldBoss then
     UIDropDownMenu_SetSelectedValue(RB.ddWBoss, RB.state.worldBoss)
-    UIDropDownMenu_SetText(RB.state.worldBoss, RB.ddWBoss)
+    UIDropDownMenu_SetText(RB.ddWBoss, RB.state.worldBoss)
   else
-    UIDropDownMenu_SetText("Pick Boss", RB.ddWBoss)
+    UIDropDownMenu_SetText(RB.ddWBoss, "Pick Boss")
   end
 end
 
@@ -977,16 +980,16 @@ function RB.InitESModeDropdown()
         local picked = this and this.value or val
         RB.state.esMode = picked
         UIDropDownMenu_SetSelectedValue(RB.ddESMode, picked)
-        UIDropDownMenu_SetText(picked, RB.ddESMode)
+        UIDropDownMenu_SetText(RB.ddESMode, picked)
 
         if RB.state.size_selected and RB.state.raid then
           local d = ComputeDefaults(RB.state.raid, RB.state.size, RB.state.esMode)
           RB.state.tanks   = d.tanks
           RB.state.healers = d.healers
           RB.state.srs     = d.srs
-          UIDropDownMenu_SetText(RB.state.tanks   .. " Tanks",   RB.ddTanks)
-          UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers)
-          UIDropDownMenu_SetText(RB.state.srs     .. " SR",      RB.ddSRs)
+          UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks   .. " Tanks")
+          UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers")
+          UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs     .. " SR")
         end
         RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
         RB.InitGearScaleDropdown()
@@ -998,18 +1001,18 @@ function RB.InitESModeDropdown()
   end)
   if RB.state.esMode then
     UIDropDownMenu_SetSelectedValue(RB.ddESMode, RB.state.esMode)
-    UIDropDownMenu_SetText(RB.state.esMode, RB.ddESMode)
+    UIDropDownMenu_SetText(RB.ddESMode, RB.state.esMode)
     if RB.state.size_selected and RB.state.raid then
       local d = ComputeDefaults(RB.state.raid, RB.state.size, RB.state.esMode)
       RB.state.tanks   = d.tanks
       RB.state.healers = d.healers
       RB.state.srs     = d.srs
-      UIDropDownMenu_SetText(RB.state.tanks   .. " Tanks",   RB.ddTanks)
-      UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers)
-      UIDropDownMenu_SetText(RB.state.srs     .. " SR",      RB.ddSRs)
+      UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks   .. " Tanks")
+      UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers")
+      UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs     .. " SR")
     end
   else
-    UIDropDownMenu_SetText("Select Mode", RB.ddESMode)
+    UIDropDownMenu_SetText(RB.ddESMode, "Select Mode")
   end
 end
 
@@ -1039,20 +1042,20 @@ function RB.InitSizeDropdown()
 
         if RB.state.raid == "-CUSTOM-" then
           -- Do NOT default-select tanks/healers/SRs for custom raids
-          RB.state.tanks, RB.state.healers, RB.state.srs = nil, nil, nil
+          RB.state.tanks, RB.state.healers, RB.state.srs = nil, nil, -1
           UIDropDownMenu_SetSelectedValue(RB.ddSize, picked)
-          UIDropDownMenu_SetText(tostring(RB.state.size), RB.ddSize)
-          UIDropDownMenu_SetText("Pick Tanks", RB.ddTanks)
-          UIDropDownMenu_SetText("Pick Healers", RB.ddHealers)
-          UIDropDownMenu_SetText("Pick SR", RB.ddSRs)
+          UIDropDownMenu_SetText(RB.ddSize, tostring(RB.state.size))
+          UIDropDownMenu_SetText(RB.ddTanks, "Pick Tanks")
+          UIDropDownMenu_SetText(RB.ddHealers, "Pick Healers")
+          UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
         else
           local d = ComputeDefaults(RB.state.raid, RB.state.size, RB.state.esMode)
           RB.state.tanks, RB.state.healers, RB.state.srs = d.tanks, d.healers, d.srs
           UIDropDownMenu_SetSelectedValue(RB.ddSize, picked)
-          UIDropDownMenu_SetText(tostring(RB.state.size), RB.ddSize)
-          UIDropDownMenu_SetText(RB.state.tanks .. " Tanks", RB.ddTanks)
-          UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers)
-          UIDropDownMenu_SetText(RB.state.srs .. " SR", RB.ddSRs)
+          UIDropDownMenu_SetText(RB.ddSize, tostring(RB.state.size))
+          UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks .. " Tanks")
+          UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers")
+          UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs .. " SR")
         end
 
         if RB.editCustomSize then RB.editCustomSize:Hide() end
@@ -1066,7 +1069,7 @@ function RB.InitSizeDropdown()
       value = "custom",
       func = function()
         UIDropDownMenu_SetSelectedValue(RB.ddSize, "custom")
-        UIDropDownMenu_SetText("Custom size", RB.ddSize)
+        UIDropDownMenu_SetText(RB.ddSize, "Custom size")
         CloseDropDownMenus()
         if RB.editCustomSize then
           RB.editCustomSize:SetText("")
@@ -1088,9 +1091,9 @@ function RB.InitSizeDropdown()
     local i
     for i=1,table.getn(list) do if list[i] == RB.state.size then isAllowed = true; break end end
     UIDropDownMenu_SetSelectedValue(RB.ddSize, isAllowed and RB.state.size or "custom")
-    UIDropDownMenu_SetText(tostring(RB.state.size), RB.ddSize)
+    UIDropDownMenu_SetText(RB.ddSize, tostring(RB.state.size))
   else
-    UIDropDownMenu_SetText("Select Size", RB.ddSize)
+    UIDropDownMenu_SetText(RB.ddSize, "Select Size")
     if RB.editCustomSize then RB.editCustomSize:Hide() end
   end
 end
@@ -1395,13 +1398,13 @@ local function OnClearClick()
   if RB.ddWBoss then RB.ddWBoss:Hide() end
   if RB.ddESMode then RB.ddESMode:Hide() end
 
-  UIDropDownMenu_SetText(RB.state.raid or "Select Raid", RB.ddRaid)
-  UIDropDownMenu_SetText("Select Size", RB.ddSize); if RB.editCustomSize then RB.editCustomSize:Hide() end
-  UIDropDownMenu_SetText("Pick Size first", RB.ddTanks)
-  UIDropDownMenu_SetText("Pick Size first", RB.ddHealers)
-  UIDropDownMenu_SetText("0 SR", RB.ddSRs)
-  UIDropDownMenu_SetText(RB.state.worldBoss or "Pick Boss", RB.ddWBoss)
-  UIDropDownMenu_SetText(RB.state.esMode or "Select Mode", RB.ddESMode)
+  UIDropDownMenu_SetText(RB.ddRaid, RB.state.raid or "Select Raid")
+  UIDropDownMenu_SetText(RB.ddSize, "Select Size"); if RB.editCustomSize then RB.editCustomSize:Hide() end
+  UIDropDownMenu_SetText(RB.ddTanks, "Pick Size first")
+  UIDropDownMenu_SetText(RB.ddHealers, "Pick Size first")
+  UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
+  UIDropDownMenu_SetText(RB.ddWBoss, RB.state.worldBoss or "Pick Boss")
+  UIDropDownMenu_SetText(RB.ddESMode, RB.state.esMode or "Select Mode")
 
   RB.cbWorld:SetChecked(RB.state.chWorld)
   RB.cbLFG:SetChecked(RB.state.chLFG)
@@ -1431,7 +1434,7 @@ local function OnClearClick()
   RB.state.gearScale = nil
   RB.state.autoGear = false
   if RB.cbGear then RB.cbGear:SetChecked(false) end
-  if RB.ddGearScale then UIDropDownMenu_SetText("Required Gear", RB.ddGearScale) end
+  if RB.ddGearScale then UIDropDownMenu_SetText(RB.ddGearScale, "Required Gear") end
   if RB.InitGearScaleDropdown then RB.InitGearScaleDropdown() end
 
   -- Clear SR & Discord fields (session)
@@ -1543,11 +1546,11 @@ function RB.Open()
 
   RB.ddPresetLoad = CreateFrame("Frame", "TacticaRBPresetLoad", f, "UIDropDownMenuTemplate")
   RB.ddPresetLoad:SetPoint("LEFT", RB.editPresetName, "RIGHT", -13, -3)
-  UIDropDownMenu_SetWidth(70, RB.ddPresetLoad)
+  UIDropDownMenu_SetWidth(RB.ddPresetLoad, 70)
 
   RB.ddPresetRemove = CreateFrame("Frame", "TacticaRBPresetRemove", f, "UIDropDownMenuTemplate")
   RB.ddPresetRemove:SetPoint("LEFT", RB.ddPresetLoad, "RIGHT", -26, 0)
-  UIDropDownMenu_SetWidth(70, RB.ddPresetRemove)
+  UIDropDownMenu_SetWidth(RB.ddPresetRemove, 70)
 
   RB.btnPresetAction = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   RB.btnPresetAction:SetWidth(64); RB.btnPresetAction:SetHeight(20)
@@ -1577,8 +1580,8 @@ function RB.Open()
           func = function()
             RB._presetLoadSel = nm
             RB._presetRemoveSel = nil
-            UIDropDownMenu_SetText(nm, RB.ddPresetLoad)
-            UIDropDownMenu_SetText("Remove", RB.ddPresetRemove)
+            UIDropDownMenu_SetText(RB.ddPresetLoad, nm)
+            UIDropDownMenu_SetText(RB.ddPresetRemove, "Remove")
             RB.editPresetName:SetText("")
             RB_UpdatePresetButtonText()
             CloseDropDownMenus()
@@ -1586,7 +1589,7 @@ function RB.Open()
         })
       end
     end)
-    UIDropDownMenu_SetText("Load", RB.ddPresetLoad)
+    UIDropDownMenu_SetText(RB.ddPresetLoad, "Load")
   end
 
   local function InitPresetRemoveDD()
@@ -1604,8 +1607,8 @@ function RB.Open()
           func = function()
             RB._presetRemoveSel = nm
             RB._presetLoadSel = nil
-            UIDropDownMenu_SetText(nm, RB.ddPresetRemove)
-            UIDropDownMenu_SetText("Load", RB.ddPresetLoad)
+            UIDropDownMenu_SetText(RB.ddPresetRemove, nm)
+            UIDropDownMenu_SetText(RB.ddPresetLoad, "Load")
             RB.editPresetName:SetText("")
             RB_UpdatePresetButtonText()
             CloseDropDownMenus()
@@ -1613,7 +1616,7 @@ function RB.Open()
         })
       end
     end)
-    UIDropDownMenu_SetText("Remove", RB.ddPresetRemove)
+    UIDropDownMenu_SetText(RB.ddPresetRemove, "Remove")
   end
 
   RB.InitPresetDropdowns = function()
@@ -1632,7 +1635,7 @@ function RB.Open()
     if RB._presetLoadSel then
       RB.LoadPreset(RB._presetLoadSel)
       RB._presetLoadSel = nil
-      UIDropDownMenu_SetText("Load", RB.ddPresetLoad)
+      UIDropDownMenu_SetText(RB.ddPresetLoad, "Load")
       RB_UpdatePresetButtonText()
       return
     end
@@ -1715,10 +1718,14 @@ function RB.Open()
       local d = ComputeDefaults(RB.state.raid, RB.state.size, RB.state.esMode)
       RB.state.tanks, RB.state.healers, RB.state.srs = d.tanks, d.healers, d.srs
       UIDropDownMenu_SetSelectedValue(RB.ddSize, "custom")
-      UIDropDownMenu_SetText(tostring(RB.state.size), RB.ddSize)
-      UIDropDownMenu_SetText(RB.state.tanks .. " Tanks", RB.ddTanks)
-      UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers)
-      UIDropDownMenu_SetText(RB.state.srs .. " SR", RB.ddSRs)
+      UIDropDownMenu_SetText(RB.ddSize, tostring(RB.state.size))
+      UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks .. " Tanks")
+      UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers")
+      if RB.state.srs and RB.state.srs >= 0 then
+        UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs .. " SR")
+      else
+        UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
+      end
       RB.SaveState(); RB.RefreshPreview(); this:Hide(); this:ClearFocus()
     end
   end)
@@ -1809,7 +1816,7 @@ function RB.Open()
         local picked = this and this.value or sec
         RB.state.interval = picked; RB.SaveState()
         UIDropDownMenu_SetSelectedValue(RB.ddInterval, picked)
-        UIDropDownMenu_SetText(title, RB.ddInterval)
+        UIDropDownMenu_SetText(RB.ddInterval, title)
         if RB.state.running then
           RB._nextSend = (GetTime and GetTime() or 0) + picked
         end
@@ -1820,8 +1827,8 @@ function RB.Open()
     add(60,"1"); add(120,"2"); add(300,"5")
   end)
   UIDropDownMenu_SetSelectedValue(RB.ddInterval, RB.state.interval)
-  UIDropDownMenu_SetText((RB.state.interval==60) and "1" or (RB.state.interval==300 and "5" or "2"), RB.ddInterval)
-  UIDropDownMenu_SetWidth(50, RB.ddInterval)
+  UIDropDownMenu_SetText(RB.ddInterval, (RB.state.interval==60) and "1" or (RB.state.interval==300 and "5" or "2"))
+  UIDropDownMenu_SetWidth(RB.ddInterval, 50)
 
   RB.lblInt = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   RB.lblInt:SetPoint("LEFT", RB.ddInterval, "RIGHT", -13, 2)
@@ -1866,7 +1873,7 @@ end)
   -- Gear Scale dropdown (right of Auto-Invite)
   RB.ddGearScale = CreateFrame("Frame", "TacticaRBGearScale", f, "UIDropDownMenuTemplate")
   RB.ddGearScale:SetPoint("LEFT", RB.cbAutoInvite, "RIGHT", 60, -3)
-  UIDropDownMenu_SetWidth(120, RB.ddGearScale)
+  UIDropDownMenu_SetWidth(RB.ddGearScale, 120)
 
   local function GearTextFor(n)
     if n==0 then return "0 – Starter" end
@@ -1893,7 +1900,7 @@ end)
         info.func = function()
           local picked = this and this.value or i
           RB.state.gearScale = picked
-          UIDropDownMenu_SetText("Scale "..picked, RB.ddGearScale)
+          UIDropDownMenu_SetText(RB.ddGearScale, "Scale "..picked)
           RB.SaveState()
           RB_SyncInviteExtras()
           CloseDropDownMenus()
@@ -1902,9 +1909,9 @@ end)
       end
     end)
     if RB.state.gearScale ~= nil then
-      UIDropDownMenu_SetText("Scale "..RB.state.gearScale, RB.ddGearScale)
+      UIDropDownMenu_SetText(RB.ddGearScale, "Scale "..RB.state.gearScale)
     else
-      UIDropDownMenu_SetText("Required Gear", RB.ddGearScale)
+      UIDropDownMenu_SetText(RB.ddGearScale, "Required Gear")
     end
   end
   RB.InitGearScaleDropdown()
@@ -2122,21 +2129,49 @@ end)
   local function setN(drop, label, fromN, toN, setter) InitNumberDropdown(drop, label, fromN, toN, setter) end
   setN(RB.ddTanks,  "Tanks",   1, 10, function(n) RB.state.tanks = n end)
   setN(RB.ddHealers,"Healers", 1, 10, function(n) RB.state.healers = n end)
-  setN(RB.ddSRs,    "SR",      0,  3, function(n) RB.state.srs = n end)
+  UIDropDownMenu_Initialize(RB.ddSRs, function()
+    local infoNo = {}
+    infoNo.text = "No loot rules"
+    infoNo.value = -1
+    infoNo.func = function()
+      RB.state.srs = -1
+      UIDropDownMenu_SetSelectedValue(RB.ddSRs, -1)
+      UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
+      RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
+    end
+    UIDropDownMenu_AddButton(infoNo)
+
+    local n
+    for n=0,3 do
+      local info = {}
+      info.text = n .. " SR"
+      info.value = n
+      info.func = function()
+        local picked = this and this.value or n
+        RB.state.srs = picked
+        UIDropDownMenu_SetSelectedValue(RB.ddSRs, picked)
+        UIDropDownMenu_SetText(RB.ddSRs, picked .. " SR")
+        RB.SaveState(); RB.RefreshPreview(); CloseDropDownMenus()
+      end
+      UIDropDownMenu_AddButton(info)
+    end
+  end)
   RB.InitPresetDropdowns()
 
   if not RB.state.size_selected then
-    UIDropDownMenu_SetText("Pick Size first", RB.ddTanks)
-    UIDropDownMenu_SetText("Pick Size first", RB.ddHealers)
+    UIDropDownMenu_SetText(RB.ddTanks, "Pick Size first")
+    UIDropDownMenu_SetText(RB.ddHealers, "Pick Size first")
   end
   if RB.state.size_selected and RB.state.tanks then
-    UIDropDownMenu_SetText(RB.state.tanks .. " Tanks", RB.ddTanks)
+    UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks .. " Tanks")
   end
   if RB.state.size_selected and RB.state.healers then
-    UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers)
+    UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers")
   end
-  if RB.state.srs then
-    UIDropDownMenu_SetText(RB.state.srs .. " SR", RB.ddSRs)
+  if RB.state.srs ~= nil and RB.state.srs >= 0 then
+    UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs .. " SR")
+  else
+    UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
   end
 
   RestoreFramePosition()
@@ -2216,23 +2251,27 @@ function RB.LoadPreset(name)
     RB.editCustomRaid:SetText(RB.state.customRaidText or "")
   end
 
-  UIDropDownMenu_SetText(RB.state.raid or "Select Raid", RB.ddRaid)
-  UIDropDownMenu_SetText(RB.state.worldBoss or "Pick Boss", RB.ddWBoss)
-  UIDropDownMenu_SetText(RB.state.esMode or "Select Mode", RB.ddESMode)
+  UIDropDownMenu_SetText(RB.ddRaid, RB.state.raid or "Select Raid")
+  UIDropDownMenu_SetText(RB.ddWBoss, RB.state.worldBoss or "Pick Boss")
+  UIDropDownMenu_SetText(RB.ddESMode, RB.state.esMode or "Select Mode")
 
   if RB.state.size_selected and RB.state.size then
-    UIDropDownMenu_SetText(tostring(RB.state.size), RB.ddSize)
-    if RB.state.tanks then   UIDropDownMenu_SetText(RB.state.tanks   .. " Tanks",   RB.ddTanks)   end
-    if RB.state.healers then UIDropDownMenu_SetText(RB.state.healers .. " Healers", RB.ddHealers) end
-    UIDropDownMenu_SetText((RB.state.srs or 0) .. " SR", RB.ddSRs)
+    UIDropDownMenu_SetText(RB.ddSize, tostring(RB.state.size))
+    if RB.state.tanks then   UIDropDownMenu_SetText(RB.ddTanks, RB.state.tanks   .. " Tanks")   end
+    if RB.state.healers then UIDropDownMenu_SetText(RB.ddHealers, RB.state.healers .. " Healers") end
+    if RB.state.srs ~= nil and RB.state.srs >= 0 then
+      UIDropDownMenu_SetText(RB.ddSRs, RB.state.srs .. " SR")
+    else
+      UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
+    end
   else
-    UIDropDownMenu_SetText("Select Size", RB.ddSize); if RB.editCustomSize then RB.editCustomSize:Hide() end
-    UIDropDownMenu_SetText("Pick Size first", RB.ddTanks)
-    UIDropDownMenu_SetText("Pick Size first", RB.ddHealers)
-    UIDropDownMenu_SetText("0 SR", RB.ddSRs)
+    UIDropDownMenu_SetText(RB.ddSize, "Select Size"); if RB.editCustomSize then RB.editCustomSize:Hide() end
+    UIDropDownMenu_SetText(RB.ddTanks, "Pick Size first")
+    UIDropDownMenu_SetText(RB.ddHealers, "Pick Size first")
+    UIDropDownMenu_SetText(RB.ddSRs, "No loot rules")
   end
 
-  UIDropDownMenu_SetText((RB.state.interval==60) and "1" or (RB.state.interval==300 and "5" or "2"), RB.ddInterval)
+  UIDropDownMenu_SetText(RB.ddInterval, (RB.state.interval==60) and "1" or (RB.state.interval==300 and "5" or "2"))
   if RB.cbWorld then RB.cbWorld:SetChecked(RB.state.chWorld) end
   if RB.cbLFG   then RB.cbLFG:SetChecked(RB.state.chLFG)   end
   if RB.cbYell  then RB.cbYell:SetChecked(RB.state.chYell) end
@@ -2363,7 +2402,7 @@ local function RB_ShowLeaderPopup()
 
     local mlDD = CreateFrame("Frame", "TacticaRBLeaderPopupML", f, "UIDropDownMenuTemplate")
     mlDD:SetPoint("TOPLEFT", f, "TOPLEFT", 120, -154)
-    UIDropDownMenu_SetWidth(160, mlDD)
+    UIDropDownMenu_SetWidth(mlDD, 160)
     local canEditML = (IsRaidLeader and IsRaidLeader() == 1) and true or false
     UIDropDownMenu_Initialize(mlDD, function()
       UIDropDownMenu_AddButton({
@@ -2373,7 +2412,7 @@ local function RB_ShowLeaderPopup()
           if type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
             TacticaRaidRoles_SetPresetMasterLooter("")
           end
-          UIDropDownMenu_SetText("None/"..(RB_LeaderNameForNoneLabel() or "raidlead"), mlDD)
+          UIDropDownMenu_SetText(mlDD, "None/"..(RB_LeaderNameForNoneLabel() or "raidlead"))
         end
       })
       local names = RB_RaidNamesInOrder()
@@ -2386,13 +2425,13 @@ local function RB_ShowLeaderPopup()
             if type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
               TacticaRaidRoles_SetPresetMasterLooter(nm)
             end
-            UIDropDownMenu_SetText(nm, mlDD)
+            UIDropDownMenu_SetText(mlDD, nm)
           end
         })
       end
     end)
     local currentML = (type(TacticaRaidRoles_GetPresetMasterLooter) == "function" and TacticaRaidRoles_GetPresetMasterLooter()) or ""
-    UIDropDownMenu_SetText((currentML ~= "" and currentML) or ("None/"..(RB_LeaderNameForNoneLabel() or "raidlead")), mlDD)
+    UIDropDownMenu_SetText(mlDD, (currentML ~= "" and currentML) or ("None/"..(RB_LeaderNameForNoneLabel() or "raidlead")))
     RB_SetDropdownEnabled(mlDD, canEditML)
 
     -- checkbox
