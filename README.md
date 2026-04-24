@@ -1,8 +1,8 @@
 # Tactica
-## Auto-build/sort raids (invite/gearcheck), post tactics, preset masterloot, loot rules & assign roles - synced!
+## Auto-build/sort/export raids (invite/role/gearcheck), post tactics, preset masterlooter, assign roles and more  - synced!
 Tactical addon for raid leading with ease — post ~90 clear boss strategies (or add your own), auto-build and sort raids (LFM creator/poster with auto-invite/auto-gearcheck/auto-assign or raid composition tool), assign & sync roles in raid roster, export participants, and smooth out loot mode changes, all in one place.
 
-_Access all functionalities and commands via **Minimap Icon**_ (<img width="15" height="15" alt="Tactica-Icon" src="https://github.com/user-attachments/assets/0e7b9ac6-d5c4-4f7e-b944-9fc8f96ec73b" />).
+_Access all functionalities and commands via **Minimap Icon**_: <img width="15" height="15" alt="Tactica-Icon" src="https://github.com/user-attachments/assets/0e7b9ac6-d5c4-4f7e-b944-9fc8f96ec73b"/>
 
 
 ## What it does (TL;DR)
@@ -94,9 +94,3 @@ _`/ttpush` or `/tactica pushroles` (raid leaders) broadcast current role list ma
 
 _`/ttclear` or `/tactica clearroles` clear all roles (local; if raid leader, clears for everyone)_
 
-## Special thanks to:
-[jrc13245](https://github.com/jrc13245/) - error catcher
-
-[i2ichardt](https://github.com/i2ichardt) - for code debugging
-
-[Shagu](https://github.com/shagu) - for coding tips
