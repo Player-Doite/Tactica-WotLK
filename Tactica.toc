@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: |cff33ff99[Tactica]|r
-## Version: 3.3.5
-## Notes: Auto-build/sort raids (invite/gearcheck), post tactics, preset masterloot, loot rules & assign roles - synced!
+## Version: 0.0.1
+## Notes: Auto-build/sort/export raids (invite/role/gearcheck), post tactics, preset masterlooter, and more.
 ## Author: Doite
 ## SavedVariables: TacticaDB
 
