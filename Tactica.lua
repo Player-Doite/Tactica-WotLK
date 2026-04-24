@@ -251,6 +251,8 @@ Tactica.Aliases = {
     ["thadd"] = "Thaddius",
     ["azu"] = "Azuregos",
     ["kazzak"] = "Lord Kazzak",
+	["volchan"] = "Volchan",
+	["ragefiretrogg"] = "Ragefire Trogg",
 	["chess"] = "King (Chess)",
 	["sanv"] = "Sanv Tas'dal",
 	["rupturan"] = "Rupturan the Broken",
@@ -2949,6 +2951,12 @@ Tactica.DefaultData = {
     },
     ["World Bosses"] = {
         ["Lord Kazzak"] = {
+            ["Default"] = ""
+        },
+        ["Volchan"] = {
+            ["Default"] = ""
+        },
+        ["Ragefire Trogg"] = {
             ["Default"] = ""
         },
         ["Azuregos"] = {
