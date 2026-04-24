@@ -84,10 +84,6 @@ Addon, logic and default tactics all made by Doite. Contact me in-game, github v
 
 _Other debug commands are:_
 
-_`/tactica_pfui` — show pfUI & SuperWoW detection status_
-
-_`/tactica_pfuitanks` — list pfUI tank flags or check one player by adding name after_
-
 _`/tactica_loot` — shows the group loot question frame_
 
 _`/ttversion` Prints your local Tactica version (from the TOC)_
