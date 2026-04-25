@@ -466,6 +466,14 @@ local function TryStartTrackingFromCurrentTarget()
   if not BossLootRequirements then return false end
   local key = string.lower(targetName)
   local cfg = BossLootRequirements[key]
+  if not cfg then
+    for _, one in pairs(BossLootRequirements) do
+      if one and one.req and one.req[key] then
+        cfg = one
+        break
+      end
+    end
+  end
   if not cfg then return false end
 
   TL_AwaitingLoot   = true
