@@ -4,19 +4,6 @@
 -------------------------------------------------
 -- Small helpers & settings
 -------------------------------------------------
--- Compatibility: provide gmatch/match if missing
-do
-  if not string.gmatch and string.gfind then
-    string.gmatch = function(s, p) return string.gfind(s, p) end
-  end
-  if not string.match then
-    string.match = function(s, p, init)
-      local _, _, cap1 = string.find(s, p, init)
-      return cap1
-    end
-  end
-end
-
 local function tlen(t)
   if table and table.getn then return table.getn(t) end
   local n=0; for _ in pairs(t) do n=n+1 end; return n
@@ -270,7 +257,7 @@ local function InitPresetMLDropdown(dd)
       text = "None/"..(GetRaidLeaderNameForLabel() or "raidlead"),
       func = function()
         SelectedPresetML = ""
-        UIDropDownMenu_SetText("None/"..(GetRaidLeaderNameForLabel() or "raidlead"), dd)
+        UIDropDownMenu_SetText(dd, "None/"..(GetRaidLeaderNameForLabel() or "raidlead"))
         if InRaid() and IsRL() and type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
           TacticaRaidRoles_SetPresetMasterLooter("")
         end
@@ -284,7 +271,7 @@ local function InitPresetMLDropdown(dd)
         text = nm,
         func = function()
           SelectedPresetML = nm
-          UIDropDownMenu_SetText(nm, dd)
+          UIDropDownMenu_SetText(dd, nm)
           if InRaid() and IsRL() and type(TacticaRaidRoles_SetPresetMasterLooter) == "function" then
             TacticaRaidRoles_SetPresetMasterLooter(nm)
           end
@@ -329,7 +316,7 @@ local function CreateLootPopup()
         text = opt.text,
         func = function()
           SelectedMethod = opt.value
-          UIDropDownMenu_SetText(opt.text, dd)
+          UIDropDownMenu_SetText(dd, opt.text)
         end
       }
       UIDropDownMenu_AddButton(info)
@@ -412,11 +399,11 @@ function TacticaLoot_ShowPopup()
   for i=1, tlen(LOOT_METHODS) do
     if LOOT_METHODS[i].value == def then shown = LOOT_METHODS[i].text end
   end
-  if LootDropdown then UIDropDownMenu_SetText(shown, LootDropdown) end
+  if LootDropdown then UIDropDownMenu_SetText(LootDropdown, shown) end
   if LootMLDropdown then
     InitPresetMLDropdown(LootMLDropdown)
     SelectedPresetML = (GetPresetMasterLooter() or "")
-    UIDropDownMenu_SetText((SelectedPresetML ~= "" and SelectedPresetML) or ("None/"..(GetRaidLeaderNameForLabel() or "raidlead")), LootMLDropdown)
+    UIDropDownMenu_SetText(LootMLDropdown, (SelectedPresetML ~= "" and SelectedPresetML) or ("None/"..(GetRaidLeaderNameForLabel() or "raidlead")))
     SetDropdownEnabled(LootMLDropdown, InRaid() and IsRL())
   end
   LootFrame:Show()
@@ -470,6 +457,32 @@ local function MarkLootMobDeath(name)
   end
 
   return completedBossKey
+end
+
+local function TryStartTrackingFromCurrentTarget()
+  local targetName = UnitName and UnitName("target") or nil
+  if not targetName or targetName == "" then return false end
+  BuildBossNameSet()
+  if not BossLootRequirements then return false end
+  local key = string.lower(targetName)
+  local cfg = BossLootRequirements[key]
+  if not cfg then
+    for _, one in pairs(BossLootRequirements) do
+      if one and one.req and one.req[key] then
+        cfg = one
+        break
+      end
+    end
+  end
+  if not cfg then return false end
+
+  TL_AwaitingLoot   = true
+  TL_SlotsRemaining = nil
+  TL_SawLootWindow  = false
+  TL_OpenedLootMob  = nil
+  TL_EmptiedLootMobs = {}
+  TL_ActiveLootReq = cfg.req
+  return true
 end
 
 -- Core entry when boss is targeted (from Tactica.lua)
@@ -544,7 +557,9 @@ f:SetScript("OnEvent", function()
     end
 
   elseif event == "LOOT_OPENED" then
-    if not TL_AwaitingLoot then return end
+    if not TL_AwaitingLoot then
+      if not TryStartTrackingFromCurrentTarget() then return end
+    end
     TL_SawLootWindow = true
     TL_SlotsRemaining = CountRemainingLootSlots()
     TL_OpenedLootMob = nil
