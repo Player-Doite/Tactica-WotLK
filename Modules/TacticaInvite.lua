@@ -1293,6 +1293,18 @@ local function onWhisperReply(author, msg)
   author = cleanName(author or "")
   if INV._sessionIgnores[lower(author)] then return true end
 
+  -- Guard: if they were manually invited while a question is still active,
+  -- stop processing role/gear replies for them.
+  if IsNameInGroup(author) then
+    INV.awaitingRole[author] = nil
+    INV.awaitCtx[author]     = nil
+    INV.lastPrompt[author]   = nil
+    INV.awaitingGear[author] = nil
+    INV._gearAfterRole[author] = nil
+    INV._gearPending[author] = nil
+    return true
+  end
+
   -- Gear reply first
   local gUntil = INV.awaitingGear[author]
   if gUntil and now() <= gUntil then
