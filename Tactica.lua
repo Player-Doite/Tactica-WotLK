@@ -216,11 +216,8 @@ Tactica.Aliases = {
     ["aq20"] = "Ruins of Ahn'Qiraj",
     ["aq40"] = "Temple of Ahn'Qiraj",
     ["ony"] = "Onyxia's Lair",
-    ["es"] = "Emerald Sanctum",
     ["naxx"] = "Naxxramas",
-    ["kara10"] = "Lower Karazhan Halls",
-    ["kara40"] = "Upper Karazhan Halls",
-    ["th"] = "Timbermaw Hold",
+    ["kara"] = "Karazhan",
     ["world"] = "World Bosses",
 
     -- Bosses
@@ -229,7 +226,6 @@ Tactica.Aliases = {
     ["geddon"] = "Baron Geddon",
     ["shaz"] = "Shazzrah",
     ["sulfuron"] = "Sulfuron Harbinger",
-	["thaurissan"] = "Sorcerer-thane Thaurissan",
     ["golemagg"] = "Golemagg the Incinerator",
     ["majordomo"] = "Majordomo Executus",
     ["razorgore"] = "Razorgore the Untamed",
@@ -252,26 +248,6 @@ Tactica.Aliases = {
     ["azu"] = "Azuregos",
     ["kazzak"] = "Lord Kazzak",
 	["volchan"] = "Volchan",
-	["ragefiretrogg"] = "Ragefire Trogg",
-	["chess"] = "King (Chess)",
-	["sanv"] = "Sanv Tas'dal",
-	["rupturan"] = "Rupturan the Broken",
-	["meph"] = "Mephistroth",
-	["medivh"] = "Echo of Medivh",
-	["incantagos"] = "Lay-Watcher Incantagos",
-	["gnarlmoon"] = "Keeper Gnarlmoon",
-	["solnius"] = "Solnius the Awakener",
-    ["loktanag "] = "Loktanag the Vile",
-    ["loktanag"] = "Loktanag the Vile",
-    ["karrsh"] = "Karrsh the Sentinel",
-    ["trioch"] = "Trioch the Devourer",
-    ["selenaxx "] = "Selenaxx Foulheart",
-    ["selenaxx"] = "Selenaxx Foulheart",
-    ["ormanos "] = "Ormanos the Cracked",
-    ["ormanos"] = "Ormanos the Cracked",
-    ["chieftain"] = "Chieftain Partath",
-    ["kronn"] = "Archdruid Kronn",
-    ["axelus"] = "Broodcommander Axelus",
 }
 
 if not UIDropDownMenu_CreateInfo then
@@ -297,19 +273,9 @@ function Tactica:RegisterBossAliases(raidName, bossName, aliases, when)
   end
 end
 
--- Kara10: Moroes friendly → Moroes hostile
-Tactica:RegisterBossAliases("Lower Karazhan Halls", "Moroes", {
-  "Moroes",
-}, "friendly")
-
 -- ZG: Vilebranch Speaker (attack to trigger boss) → Bloodlord Mandokir
 Tactica:RegisterBossAliases("Zul'Gurub", "Bloodlord Mandokir", {
   "Vilebranch Speaker",
-}, "hostile")
-
--- MC: Smoldaris & Basalthar → either name should trigger that encounter (hostile NPCs)
-Tactica:RegisterBossAliases("Molten Core", "Smoldaris & Basalthar", {
-  "Smoldaris", "Basalthar",
 }, "hostile")
 
 -- MC: Majordomo Executus (friendly talk-to-summon) → Ragnaros
@@ -342,21 +308,6 @@ Tactica:RegisterBossAliases("Naxxramas", "The Four Horsemen", {
   "Thane Korth'azz","Lady Blaumeux","Sir Zeliek","Highlord Mograine",
 }, "hostile")
 
--- Kara40: Any key piece should count → King (Chess) (they’re hostile; “any” is also fine)
-Tactica:RegisterBossAliases("Upper Karazhan Halls", "King (Chess)", {
-  "King","Rook","Bishop","Knight","Decaying Bishop","Malfunctioning Knight","Broken Rook","Withering Pawn",
-}, "hostile")
-
--- Timbermaw: Kodiak add should count as Rotgrowl encounter target
-Tactica:RegisterBossAliases("Timbermaw Hold", "Rotgrowl", {
-  "Kodiak",
-}, "hostile")
-
--- ES: Solnius before spoken to → Solnius hostile (later the dragon Solnius the Awakener)
-Tactica:RegisterBossAliases("Emerald Sanctum", "Solnius the Awakener", {
-  "Solnius",
-}, "friendly")
-
 -------------------------------------------------
 -- INITIALIZATION
 -------------------------------------------------
@@ -375,7 +326,7 @@ local function InitializeSavedVariables()
         TacticaDB = {
             version = Tactica.SavedVariablesVersion,
             CustomTactics = {},
-            Healers = {}, -- NEW: role flags for raid members
+            Healers = {},
             Settings = {
                 UseRaidWarning = true,
                 UseRaidChat = true,
@@ -2047,8 +1998,8 @@ function Tactica:CreatePostFrame()
             local raids = {
                 "Molten Core", "Blackwing Lair", "Zul'Gurub",
                 "Ruins of Ahn'Qiraj", "Temple of Ahn'Qiraj",
-                "Onyxia's Lair", "Emerald Sanctum", "Naxxramas",
-                "Lower Karazhan Halls", "Upper Karazhan Halls", "Timbermaw Hold", "World Bosses"
+                "Onyxia's Lair", "Naxxramas", "Karazhan",
+				"World Bosses"
             }
             for _, raidName in ipairs(raids) do
                 local r = raidName
@@ -2756,17 +2707,10 @@ end
 
 Tactica.DefaultData = {
     ["Molten Core"] = {
-		["Incindis"] = {
-			["Default"] = ""
-		},
 		["Lucifron"] = {
 			["Default"] = ""
 		},
 		["Magmadar"] = {
-			["Default"] = ""
-		},
-		["Smoldaris & Basalthar"] = {
-			["Loot table"] = { "Smoldaris", "Basalthar" },
 			["Default"] = ""
 		},
 		["Garr"] = {
@@ -2785,9 +2729,6 @@ Tactica.DefaultData = {
 			["Default"] = ""
 		},
 		["Majordomo Executus"] = {
-			["Default"] = ""
-		},
-		["Sorcerer-thane Thaurissan"] = {
 			["Default"] = ""
 		},
 		["Ragnaros"] = {
@@ -2951,24 +2892,9 @@ Tactica.DefaultData = {
     },
     ["World Bosses"] = {
         ["Lord Kazzak"] = {
-            ["Default"] = ""
+            ["Default"] = "Tanks: One tank is sufficient. Face Kazzak away from the raid to avoid Cleave. Manage threat carefully—player deaths heal Kazzak via Capture Soul. Maintain cooldowns to survive during enrage.\nDPS: Manage threat tightly; avoid stacking. Dying causes Kazzak to heal. Dispel Twisted Reflection to stop boss healing and Mark of Kazzak to prevent explosive deaths.\nHealers: Dispel Twisted Reflection fast (Priests/Paladins). Cleanse Mark of Kazzak or have target run away before mana burnout explosion. Watch for Capture Soul, heal quick to avoid healing Kazzak.\nClass Specific: Priests/Paladins must dispel Twisted Reflection. Druids/Mages should cleanse Mark of Kazzak if possible or the target should disengage raid safely. Other classes support with LoS for Shadowbolt Volley.\nBoss Ability: Heals when players die (Capture Soul), casts Twisted Reflection to steal life—must be dispelled, Mark of Kazzak drains mana then explodes, Shadowbolt Volley hits raid, Enrages after 3 mins—burn fast or wipe."
         },
         ["Volchan"] = {
-            ["Default"] = ""
-        },
-        ["Ragefire Trogg"] = {
-            ["Default"] = ""
-        },
-        ["Volchan"] = {
-            ["Default"] = ""
-        },
-        ["Ragefire Trogg"] = {
-            ["Default"] = ""
-        },
-        ["Volchan"] = {
-            ["Default"] = ""
-        },
-        ["Ragefire Trogg"] = {
             ["Default"] = ""
         },
         ["Azuregos"] = {
@@ -2985,124 +2911,20 @@ Tactica.DefaultData = {
         },
         ["Ysondre"] = {
             ["Default"] = ""
-        },
-        ["Nerubian Overseer"] = {
-			["Default"] = ""
-		},
-		["Dark Reaver of Karazhan"] = {
-			["Default"] = ""
-		},
-		["Ostarius"] = {
-			["Default"] = ""
-		},
-		["Concavius"] = {
-			["Default"] = ""
-		},
-		["Moo"] = {
-			["Default"] = ""
-		},
-        ["Cla'ckora"] = {
+        }
+    },
+    ["Karazhan"] = {
+        ["EMPTY"] = {
             ["Default"] = ""
         }
     },
-    ["Emerald Sanctum"] = {
-        ["Erennius"] = {
-            ["Default: Normal"] = "",
-			["Default: Hard Mode"] = ""
-        },
-        ["Solnius the Awakener"] = {
-            ["Default: Normal"] = "",
-			["Default: Hard Mode"] = ""
-        },
-    },
-    ["Lower Karazhan Halls"] = {
-        ["Master Blacksmith Rolfen"] = {
-            ["Default"] = ""
-        },
-        ["Brood Queen Araxxna"] = {
-            ["Default"] = ""
-        },
-        ["Grizikil"] = {
-            ["Default"] = ""
-        },
-        ["Clawlord Howlfang"] = {
-            ["Default"] = ""
-        },
-        ["Lord Blackwald II"] = {
-            ["Default"] = ""
-        },
-        ["Moroes"] = {
-            ["Default"] = ""
-        }
-    },
-    ["Upper Karazhan Halls"] = {
-		["Keeper Gnarlmoon"] = {
-			["Default"] = ""
-		},
-		["Lay-Watcher Incantagos"] = {
-			["Default"] = ""
-		},
-		["Anomalus"] = {
-			["Default"] = ""
-		},
-		["Echo of Medivh"] = {
-			["Default"] = ""
-		},
-		["King (Chess)"] = {
-			["Loot table"] = { "King" },
-			["Default"] = ""
-		},
-		["Sanv Tas'dal"] = {
-			["Default"] = ""
-		},
-		["Kruul"] = {
-			["Default"] = ""
-		},
-		["Rupturan the Broken"] = {
-			["Default"] = ""
-		},
-		["Mephistroth"] = {
-			["Default"] = ""
-		}
-	},
+
     ["Onyxia's Lair"] = {
         ["Broodcommander Axelus"] = {
             ["Default"] = ""
         },
         ["Onyxia"] = {
             ["Default"] = "Tanks: Tank near back wall during inital phase (P1) and when Onyxia lands again (P3). Turn away from raid (side of boss towards raid). During airphase (P2), grab all adds.\nDPS: Never stand behind or infront of Onyxia. Focus adds when up. CARE THREAT! Stable DPS and let tank get agro when Onyxia lands (P3).\nHealers: Focus on tank, and during airphase (P2) and landing phase (P3) on damage on raid.\nClass Specific: Fear Ward (Priests) and Tremor Totem (Shaman) prio for MT during landing phase (P3).\nBoss Ability: During airphase (P2) Onyxia will occasionally Fire Breath, with will likely kill anyone in it's path. To avoid it ALL must NEVER stand beneath or diagonally (in straight line) from where Onyxia currently is facing. Note the boss will move."
-        }
-    },
-    ["Timbermaw Hold"] = {
-        ["Karrsh the Sentinel"] = {
-            ["Default"] = ""
-        },
-        ["Rotgrowl"] = {
-            ["Default"] = ""
-        },
-        ["Loktanag the Vile"] = {
-            ["Default"] = ""
-        },
-        ["Trioch the Devourer"] = {
-            ["Default"] = ""
-        },
-        ["Selenaxx Foulheart"] = {
-            ["Default"] = ""
-        },
-        ["Ormanos the Cracked"] = {
-            ["Default"] = ""
-        },
-        ["Chieftain Partath"] = {
-            ["Default"] = ""
-        },
-        ["Archdruid Kronn"] = {
-            ["Default"] = ""
-        },
-        ["Ursol"] = {
-            ["Default"] = ""
-        },
-        ["Peroth'arn"] = {
-            ["Default"] = ""
         }
     }
 }
