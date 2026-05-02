@@ -630,7 +630,7 @@ end
 local function RB_NudgeAssignRoles(unassigned)
   if not unassigned or unassigned <= 0 then return end
   local msg = "|cffffd100[Tactica]:|r You have |cffffff00" .. unassigned ..
-              "|r unassigned group members. Assign Tank/Healer/DPS in the Raid Roster (Right-click a player to Set Role)."
+              "|r unassigned group members. Assign Tank/Healer/DPS in the Raid Roster or via Unit Frames (Right-click a player to Set Role)."
   RB_After(1, function() RB_Print(msg) end)
 end
 
