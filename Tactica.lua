@@ -1679,8 +1679,8 @@ function Tactica:CreateAddFrame()
             local raids = {
                 "Molten Core", "Blackwing Lair", "Zul'Gurub",
                 "Ruins of Ahn'Qiraj", "Temple of Ahn'Qiraj",
-                "Onyxia's Lair", "Emerald Sanctum", "Naxxramas",
-                "Lower Karazhan Halls", "Upper Karazhan Halls", "Timbermaw Hold", "World Bosses"
+                "Onyxia's Lair", "Naxxramas", "Karazhan", 
+				"World Bosses"
             }
             for _, raidName in ipairs(raids) do
                 local raidName = raidName
