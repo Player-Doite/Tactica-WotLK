@@ -1,8 +1,8 @@
 # Tactica
 ## Auto-build/sort/export raids (invite/role/gearcheck), post tactics, preset masterlooter, assign roles and more  - synced!
-Tactical addon for raid leading with ease — post ~90 clear boss strategies (or add your own), auto-build and sort raids (LFM creator/poster with auto-invite/auto-gearcheck/auto-assign or raid composition tool), assign & sync roles in raid roster, export participants, and smooth out loot mode changes, all in one place.
+Tactical addon for raid leading with ease — post boss strategies (or add your own), auto-build and sort raids (LFM creator/poster with auto-invite/auto-gearcheck/auto-assign or raid composition tool), assign & sync roles in raid roster, export participants, and smooth out loot mode changes, all in one place.
 
-_Access all functionalities and commands via **Minimap Icon**_: <img width="15" height="15" alt="Tactica-Icon" src="https://github.com/user-attachments/assets/0e7b9ac6-d5c4-4f7e-b944-9fc8f96ec73b"/>
+_Access all functionalities and commands via below **Minimap Icon**_: <img width="15" height="15" alt="Tactica-Icon" src="https://github.com/user-attachments/assets/0e7b9ac6-d5c4-4f7e-b944-9fc8f96ec73b"/>
 
 
 ## What it does (TL;DR)
@@ -20,7 +20,6 @@ _Access all functionalities and commands via **Minimap Icon**_: <img width="15" 
 ### 2. Organize your comp at a glance
 - Right-click raid roster to Toggle as Healer / DPS / Tank. Roles sync to everyone running Tactica; latest leader/assist decision wins.
 - Clean indicators next to names (H/D/T).
-- pfUI (optional): Tactica’s Tank role also flags the vanilla-compliant pfUI addon’s tank role when pfUI is present (requires SuperWoW).
 - `/tt roles` to post the assigned and number of tanks, healers and DPS, respectively, to the raid.
 - `/tt rolewhisper` toggle the role whisper function on/off (same as the checkbox in **/tt options**).
 - `/tt autoinvite` or `/ttai` for standalone auto-invite frame, with auto-assign roles functionality.
